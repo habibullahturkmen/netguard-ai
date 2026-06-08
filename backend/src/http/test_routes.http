@@ -1,0 +1,15 @@
+POST http://localhost:5000/api/analyze
+Content-Type: application/json
+
+{
+"source_ip": "192.168.1.10",
+"destination_ip": "8.8.8.8",
+"protocol": "TCP",
+
+"service": "http",
+"flag": "SF",
+
+"duration": 12,
+"src_bytes": 5000,
+"dst_bytes": 3000
+}
