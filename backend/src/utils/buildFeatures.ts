@@ -1,9 +1,15 @@
 export function buildFeatures(body: any) {
+  const protocolType = String(body.protocol ?? body.protocol_type ?? "tcp")
+    .trim()
+    .toLowerCase() || "tcp";
+  const service = String(body.service ?? "http").trim().toLowerCase() || "http";
+  const flag = String(body.flag ?? "SF").trim().toUpperCase() || "SF";
+
   return {
     duration: body.duration ?? 0,
-    protocol_type: body.protocol ?? "tcp",
-    service: body.service ?? "http",
-    flag: body.flag ?? "SF",
+    protocol_type: protocolType,
+    service,
+    flag,
 
     src_bytes: body.src_bytes ?? body.srcBytes ?? 0,
     dst_bytes: body.dst_bytes ?? body.dstBytes ?? 0,

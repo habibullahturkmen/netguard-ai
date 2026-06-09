@@ -13,18 +13,19 @@ export default function Dashboard() {
   const [logs, setLogs] =
     useState<TrafficLog[]>([]);
 
-  const loadLogs = async () => {
-
-    const data =
-      await fetchLogs();
-
-    setLogs(data);
-  };
-
   useEffect(() => {
+    const loadLogs = async () => {
+      try {
+        const data = await fetchLogs();
+        setLogs(data);
+      } catch {
+        // keep existing logs on transient fetch failures
+      }
+    };
 
     loadLogs();
-
+    const interval = setInterval(loadLogs, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   return (

@@ -79,71 +79,125 @@ FEATURES = [
     "dst_bytes"
 ]
 
-ML_THRESHOLD = float(os.getenv("ML_THRESHOLD", "0.6"))
+ML_THRESHOLD = float(os.getenv("ML_THRESHOLD", "0.4"))
 
 
 @app.post("/predict")
 def predict(data: TrafficData):
-    # convert request → dict
     input_dict = data.model_dump()
-
-    # build dataframe (important for encoding consistency)
     df = pd.DataFrame([input_dict])
 
-    # encode categorical features using training encoders
+    # encode categorical features
     for col in ["protocol_type", "service", "flag"]:
         if col in df.columns:
             try:
                 if df[col].iloc[0] in encoders[col].classes_:
                     df[col] = encoders[col].transform(df[col])
                 else:
-                    # fallback for unseen values
                     df[col] = 0
             except Exception:
-                # encoder not found or unexpected structure
                 df[col] = 0
 
-    # note: many training pipelines expect exact column ordering.
-    # if your model was trained with a fixed FEATURES order, uncomment the next line
-    # df = df[FEATURES]
-
-    # convert to numpy
+    # reorder to training columns (fill missing with 0)
+    TRAINING_ORDER = [
+        "duration","protocol_type","service","flag","src_bytes","dst_bytes",
+        "land","wrong_fragment","urgent","hot","num_failed_logins","logged_in",
+        "num_compromised","root_shell","su_attempted","num_root","num_file_creations",
+        "num_shells","num_access_files","num_outbound_cmds","is_host_login","is_guest_login",
+        "count","srv_count","serror_rate","srv_serror_rate","rerror_rate","srv_rerror_rate",
+        "same_srv_rate","diff_srv_rate","srv_diff_host_rate","dst_host_count","dst_host_srv_count",
+        "dst_host_same_srv_rate","dst_host_diff_srv_rate","dst_host_same_src_port_rate",
+        "dst_host_srv_diff_host_rate","dst_host_serror_rate","dst_host_srv_serror_rate",
+        "dst_host_rerror_rate","dst_host_srv_rerror_rate"
+    ]
+    df = df.reindex(columns=TRAINING_ORDER, fill_value=0)
     features = df.values
 
-    # compute probability for attack class robustly
+    # get model outputs
+    model_label = None
+    proba = None
+    try:
+        model_label = model.predict(features)[0]
+    except Exception:
+        model_label = None
     try:
         proba = model.predict_proba(features)[0]
-        # determine index of the positive/attack class (assume label '1' used for attacks)
-        attack_index = None
-        if hasattr(model, "classes_"):
-            try:
-                attack_index = list(model.classes_).index(1)
-            except ValueError:
-                # fallback: if classes_ doesn't include 1, choose the last column as attack
-                attack_index = len(proba) - 1
-        else:
-            attack_index = len(proba) - 1
-
-        attack_prob = float(proba[attack_index])
-    except Exception as e:
-        # if predict_proba is not available, fallback to predict
-        logger.exception("predict_proba failed, falling back to predict: %s", e)
-        prediction_raw = model.predict(features)[0]
-        attack_prob = 1.0 if prediction_raw == 1 else 0.0
+    except Exception:
         proba = None
 
-    # apply threshold to decide final label
+    classes_list = list(getattr(model, "classes_", []))
+    classes_lower = [str(c).lower() for c in classes_list]
+
+    # determine attack index robustly
+    attack_index = None
+    attack_keywords = ["anomaly", "attack", "malicious", "malware", "intrusion"]
+    if classes_list:
+        for i, c in enumerate(classes_lower):
+            if any(k in c for k in attack_keywords):
+                attack_index = i
+                break
+        if attack_index is None and len(classes_list) == 2:
+            # pick the non-normal class
+            if "normal" in classes_lower[0] or "benign" in classes_lower[0]:
+                attack_index = 1
+            else:
+                attack_index = 0
+
+    # fallback if still None
+    if attack_index is None and proba is not None:
+        attack_index = int(np.argmax(proba))
+    if attack_index is None:
+        attack_index = 0
+
+    # compute attack probability
+    if proba is not None:
+        try:
+            attack_prob = float(proba[attack_index])
+        except Exception:
+            attack_prob = float(np.max(proba))
+        proba_list = proba.tolist()
+    else:
+        # approximate from model_label text if no proba
+        s = str(model_label).lower() if model_label is not None else ""
+        attack_prob = 1.0 if any(k in s for k in attack_keywords) else 0.0
+        proba_list = None
+
+    # map model_label conservatively
+    def model_label_to_text(lbl):
+        if lbl is None:
+            return None
+        s = str(lbl).lower().strip()
+        suspicious_exact = {"1", "true", "suspicious", "anomaly", "attack", "malicious", "intrusion"}
+        normal_exact = {"0", "false", "normal", "benign"}
+        if s in suspicious_exact or s.startswith("rule:"):
+            return "Suspicious"
+        if s in normal_exact:
+            return "Normal"
+        if s.startswith(("attack", "anomaly", "malicious", "intrusion", "suspicious")):
+            return "Suspicious"
+        if s in ("normal", "benign"):
+            return "Normal"
+        return None
+
+    model_label_text = model_label_to_text(model_label)
+
+    # FINAL decision: prefer probability-based decision unless model_label explicitly says Suspicious
     threshold = float(os.getenv("ML_THRESHOLD", ML_THRESHOLD))
-    prediction = 1 if attack_prob >= threshold else 0
+    prob_based_label = "Suspicious" if attack_prob >= threshold else "Normal"
+    if model_label_text == "Suspicious":
+        predicted_label = "Suspicious"
+    else:
+        # use probability-based label (override model.predict "normal" strings)
+        predicted_label = prob_based_label
 
-    label = "Suspicious" if prediction == 1 else "Normal"
-
-    # log input and decision for debugging
-    logger.info("predict called; label=%s prob=%.3f threshold=%.3f input=%s", label, attack_prob, threshold, input_dict)
+    logger.info("predict -> label=%s attack_prob=%.3f threshold=%.3f model_label=%s classes=%s features=%s",
+                predicted_label, attack_prob, threshold, model_label, classes_list, df.iloc[0].to_dict())
 
     return {
-        "prediction": label,
+        "prediction": predicted_label,
         "confidence": round(attack_prob, 3),
-        "raw_proba": proba.tolist() if proba is not None else None,
+        "model_label": model_label,
+        "raw_proba": proba_list,
+        "classes": classes_list,
         "threshold": threshold,
     }

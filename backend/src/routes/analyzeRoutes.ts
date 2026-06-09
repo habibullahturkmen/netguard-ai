@@ -11,11 +11,14 @@ const router = Router();
 // Config (adjust via env)
 const ALERT_CONSECUTIVE = Number(process.env.ALERT_CONSECUTIVE || 3); // require N consecutive suspicious windows
 const ALERT_COOLDOWN = Number(process.env.ALERT_COOLDOWN || 300); // seconds
-const MIN_COUNT = Number(process.env.MIN_COUNT || 10); // minimal packets in window to consider
+const MIN_COUNT = Number(process.env.MIN_COUNT || 3); // match live_sniffer SEND_THRESHOLD default
 const MIN_DST_HOST_COUNT = Number(process.env.MIN_DST_HOST_COUNT || 5); // minimal distinct srcs
 const MIN_SERROR_RATE = Number(process.env.MIN_SERROR_RATE || 0.3); // minimal serror_rate to consider
-const ML_THRESHOLD = Number(process.env.ML_THRESHOLD || 0.6); // fallback threshold (backend can override)
+const ML_THRESHOLD = Number(process.env.ML_THRESHOLD || 0.4); // fallback when ML service omits prediction
 const WHITELIST_PREFIXES = (process.env.WHITELIST_PREFIXES || "").split(",").map(s => s.trim()).filter(Boolean);
+const DOS_COUNT_THRESHOLD = Number(process.env.DOS_COUNT_THRESHOLD || 200);
+const DOS_SERROR_THRESHOLD = Number(process.env.DOS_SERROR_THRESHOLD || 0.8);
+const DOS_DST_HOST_COUNT = Number(process.env.DOS_DST_HOST_COUNT || 50);
 
 // In-memory state (per-destination IP). For production, use Redis.
 type StateEntry = { consecutive: number; lastAlertAt?: number; lastSeenAt: number };
@@ -51,9 +54,9 @@ router.post("/", async (req, res) => {
     } = req.body;
 
     // 1) quick filter: ignore whitelisted destinations (still record if you want; here we skip)
-    if (isWhitelisted(destination_ip) || isWhitelisted(source_ip)) {
-      return res.status(200).json({ message: "Whitelisted - ignored" });
-    }
+    // if (isWhitelisted(destination_ip) || isWhitelisted(source_ip)) {
+    //   return res.status(200).json({ message: "Whitelisted - ignored" });
+    // }
 
     // 2) build features and call ML service
     const features = buildFeatures({
@@ -68,9 +71,58 @@ router.post("/", async (req, res) => {
       serror_rate,
     });
 
-    const mlResponse = await getPrediction(features);
+    const maybeCount = Number(req.body.count ?? 0);
+    const maybeSerror = Number(req.body.serror_rate ?? 0);
+    const maybeDstHosts = Number(req.body.dst_host_count ?? 0);
+
+    // If this rule matches, treat as suspicious immediately (bypass ML)
+    const isDeterministicDos = (maybeCount >= DOS_COUNT_THRESHOLD)
+      && (maybeSerror >= DOS_SERROR_THRESHOLD)
+      && (maybeDstHosts >= DOS_DST_HOST_COUNT);
+
+    let mlResponse;
+    if (isDeterministicDos) {
+      // create traffic_logs row with Suspicious and also insert into alerts (existing code path)
+      // You can shortcut by setting mlResponse/predictedLabel accordingly:
+      mlResponse = { prediction: "Suspicious", confidence: 1.0, model_label: "rule:detection" };
+      // then proceed to insertTraffic (the code below will insert) and alert handling
+    } else {
+      mlResponse = await getPrediction(features);
+    }
+
+
     const attackProb = Number(mlResponse.confidence ?? 0);
-    const predictedLabel = mlResponse.prediction ?? (attackProb >= ML_THRESHOLD ? "Suspicious" : "Normal");
+
+    // Map raw model labels without fragile substring checks (e.g. "abnormal" ≠ "normal")
+    function modelLabelToText(lbl: unknown): "Suspicious" | "Normal" | null {
+      if (lbl === null || typeof lbl === "undefined") return null;
+      const s = String(lbl).toLowerCase().trim();
+
+      const suspiciousExact = new Set([
+        "1", "true", "suspicious", "anomaly", "attack", "malicious", "intrusion",
+      ]);
+      const normalExact = new Set(["0", "false", "normal", "benign"]);
+
+      if (suspiciousExact.has(s) || s.startsWith("rule:")) return "Suspicious";
+      if (normalExact.has(s)) return "Normal";
+      if (/^(attack|anomaly|malicious|intrusion|suspicious)/.test(s)) return "Suspicious";
+      if (/^(normal|benign)$/.test(s)) return "Normal";
+
+      return null;
+    }
+
+    // Trust ML service prediction first; only re-threshold when it is missing or unknown
+    const mlPrediction = mlResponse.prediction;
+    let predictedLabel: "Suspicious" | "Normal";
+    if (mlPrediction === "Suspicious" || mlPrediction === "Normal") {
+      predictedLabel = mlPrediction;
+    } else {
+      const fromModelLabel = modelLabelToText(mlResponse.model_label);
+      predictedLabel = fromModelLabel ?? (attackProb >= ML_THRESHOLD ? "Suspicious" : "Normal");
+    }
+
+    // logging for debugging
+    console.info("ML_RESPONSE:", { predictedLabel, attackProb, mlResponse });
 
     // 3) numeric gating to avoid tiny events
     const nCount = Number(count ?? 0);
@@ -82,7 +134,7 @@ router.post("/", async (req, res) => {
     const key = destination_ip || `${source_ip}->${destination_ip}` || "unknown";
     const entry = state.get(key) ?? { consecutive: 0, lastSeenAt: nowSec() };
 
-    const isSuspectThisWindow = (predictedLabel === "Suspicious") || (attackProb >= ML_THRESHOLD);
+    const isSuspectThisWindow = predictedLabel === "Suspicious";
 
     if (isSuspectThisWindow && passesNumericGate) {
       entry.consecutive = (entry.consecutive || 0) + 1;

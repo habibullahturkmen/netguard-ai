@@ -1,40 +1,17 @@
-// import axios from "axios";
-//
-// export interface PredictionResponse {
-//   prediction: string;
-//   confidence: number;
-// }
-//
-// export const getPrediction = async (
-//   duration: number,
-//   srcBytes: number,
-//   dstBytes: number
-// ): Promise<PredictionResponse> => {
-//
-//   const response = await axios.post(
-//     process.env.ML_SERVICE_URL || "http://localhost:8000/predict",
-//     {
-//       duration,
-//       src_bytes: srcBytes,
-//       dst_bytes: dstBytes,
-//     }
-//   );
-//   return response.data;
-// };
-
-
 import axios from "axios";
 
 export interface PredictionResponse {
   prediction: string;
   confidence: number;
+  model_label: string;
 }
 
-export const getPrediction = async (features: any): Promise<PredictionResponse> => {
-  const response = await axios.post(
-    `${process.env.ML_SERVICE_URL}/predict` || "http://localhost:8000/predict",
-    features
-  );
+const mlPredictUrl = (): string => {
+  const base = (process.env.ML_SERVICE_URL || "http://localhost:8000").replace(/\/$/, "");
+  return `${base}/predict`;
+};
 
+export const getPrediction = async (features: any): Promise<PredictionResponse> => {
+  const response = await axios.post(mlPredictUrl(), features);
   return response.data;
 };
