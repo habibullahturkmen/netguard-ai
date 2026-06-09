@@ -3,6 +3,11 @@ from pydantic import BaseModel
 import joblib
 import numpy as np
 import pandas as pd
+import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("ml-service")
 
 app = FastAPI()
 
@@ -60,9 +65,10 @@ class TrafficData(BaseModel):
     dst_host_rerror_rate: float = 0
     dst_host_srv_rerror_rate: float = 0
 
+
 # -----------------------------
-# FEATURE ORDER (CRITICAL)
-# must match training exactly
+# FEATURE ORDER (if you have a specific order, set FEATURES accordingly)
+# must match training exactly if you rely on column order; otherwise we send as-is
 # -----------------------------
 FEATURES = [
     "duration",
@@ -73,61 +79,71 @@ FEATURES = [
     "dst_bytes"
 ]
 
+ML_THRESHOLD = float(os.getenv("ML_THRESHOLD", "0.6"))
+
+
 @app.post("/predict")
 def predict(data: TrafficData):
+    # convert request → dict
+    input_dict = data.model_dump()
 
-    df = pd.DataFrame([data.model_dump()])
+    # build dataframe (important for encoding consistency)
+    df = pd.DataFrame([input_dict])
 
-    # encode categorical features
+    # encode categorical features using training encoders
     for col in ["protocol_type", "service", "flag"]:
-        if df[col].iloc[0] in encoders[col].classes_:
-            df[col] = encoders[col].transform(df[col])
-        else:
-            df[col] = 0
+        if col in df.columns:
+            try:
+                if df[col].iloc[0] in encoders[col].classes_:
+                    df[col] = encoders[col].transform(df[col])
+                else:
+                    # fallback for unseen values
+                    df[col] = 0
+            except Exception:
+                # encoder not found or unexpected structure
+                df[col] = 0
 
+    # note: many training pipelines expect exact column ordering.
+    # if your model was trained with a fixed FEATURES order, uncomment the next line
+    # df = df[FEATURES]
+
+    # convert to numpy
     features = df.values
 
-    prediction = model.predict(features)[0]
+    # compute probability for attack class robustly
+    try:
+        proba = model.predict_proba(features)[0]
+        # determine index of the positive/attack class (assume label '1' used for attacks)
+        attack_index = None
+        if hasattr(model, "classes_"):
+            try:
+                attack_index = list(model.classes_).index(1)
+            except ValueError:
+                # fallback: if classes_ doesn't include 1, choose the last column as attack
+                attack_index = len(proba) - 1
+        else:
+            attack_index = len(proba) - 1
 
-    confidence = float(max(model.predict_proba(features)[0]))
+        attack_prob = float(proba[attack_index])
+    except Exception as e:
+        # if predict_proba is not available, fallback to predict
+        logger.exception("predict_proba failed, falling back to predict: %s", e)
+        prediction_raw = model.predict(features)[0]
+        attack_prob = 1.0 if prediction_raw == 1 else 0.0
+        proba = None
+
+    # apply threshold to decide final label
+    threshold = float(os.getenv("ML_THRESHOLD", ML_THRESHOLD))
+    prediction = 1 if attack_prob >= threshold else 0
+
+    label = "Suspicious" if prediction == 1 else "Normal"
+
+    # log input and decision for debugging
+    logger.info("predict called; label=%s prob=%.3f threshold=%.3f input=%s", label, attack_prob, threshold, input_dict)
 
     return {
-        "prediction": "Suspicious" if prediction == 1 else "Normal",
-        "confidence": confidence
+        "prediction": label,
+        "confidence": round(attack_prob, 3),
+        "raw_proba": proba.tolist() if proba is not None else None,
+        "threshold": threshold,
     }
-
-#
-# @app.post("/predict")
-# def predict(data: TrafficData):
-#
-#     # convert request → dict
-#     input_dict = data.model_dump()
-#
-#     # build dataframe (important for encoding consistency)
-#     df = pd.DataFrame([input_dict])
-#
-#     # encode categorical features using training encoders
-#     for col in ["protocol_type", "service", "flag"]:
-#         if col in df.columns:
-#             if df[col].iloc[0] in encoders[col].classes_:
-#                 df[col] = encoders[col].transform(df[col])
-#             else:
-#                 # fallback for unseen values
-#                 df[col] = 0
-#
-#     # reorder features exactly as training expects
-#     df = df[FEATURES]
-#
-#     # convert to numpy
-#     features = df.values
-#
-#     # prediction
-#     prediction = model.predict(features)[0]
-#
-#     # confidence
-#     confidence = float(np.max(model.predict_proba(features)[0]))
-#
-#     return {
-#         "prediction": "Suspicious" if prediction == 1 else "Normal",
-#         "confidence": round(confidence, 2)
-#     }

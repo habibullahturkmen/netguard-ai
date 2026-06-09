@@ -32,7 +32,7 @@ export interface PredictionResponse {
 
 export const getPrediction = async (features: any): Promise<PredictionResponse> => {
   const response = await axios.post(
-    process.env.ML_SERVICE_URL || "http://localhost:8000/predict",
+    `${process.env.ML_SERVICE_URL}/predict` || "http://localhost:8000/predict",
     features
   );
 
