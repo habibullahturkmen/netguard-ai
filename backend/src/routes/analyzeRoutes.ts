@@ -15,7 +15,12 @@ const MIN_COUNT = Number(process.env.MIN_COUNT || 3); // match live_sniffer SEND
 const MIN_DST_HOST_COUNT = Number(process.env.MIN_DST_HOST_COUNT || 5); // minimal distinct srcs
 const MIN_SERROR_RATE = Number(process.env.MIN_SERROR_RATE || 0.3); // minimal serror_rate to consider
 const ML_THRESHOLD = Number(process.env.ML_THRESHOLD || 0.4); // fallback when ML service omits prediction
-const WHITELIST_PREFIXES = (process.env.WHITELIST_PREFIXES || "").split(",").map(s => s.trim()).filter(Boolean);
+const WHITELIST_ENABLED =
+  process.env.WHITELIST_ENABLED === "true" || process.env.WHITELIST_ENABLED === "1";
+const WHITELIST_PREFIXES = (process.env.WHITELIST_PREFIXES || "")
+  .split(",")
+  .map((s) => s.trim().replace(/^["']|["']$/g, ""))
+  .filter(Boolean);
 const DOS_COUNT_THRESHOLD = Number(process.env.DOS_COUNT_THRESHOLD || 200);
 const DOS_SERROR_THRESHOLD = Number(process.env.DOS_SERROR_THRESHOLD || 0.8);
 const DOS_DST_HOST_COUNT = Number(process.env.DOS_DST_HOST_COUNT || 50);
@@ -53,10 +58,10 @@ router.post("/", async (req, res) => {
       serror_rate,
     } = req.body;
 
-    // 1) quick filter: ignore whitelisted destinations (still record if you want; here we skip)
-    // if (isWhitelisted(destination_ip) || isWhitelisted(source_ip)) {
-    //   return res.status(200).json({ message: "Whitelisted - ignored" });
-    // }
+    // Skip traffic TO whitelisted destinations only (outbound LAN traffic still analyzed)
+    if (WHITELIST_ENABLED && isWhitelisted(destination_ip)) {
+      return res.status(200).json({ message: "Whitelisted - ignored", destination_ip });
+    }
 
     // 2) build features and call ML service
     const features = buildFeatures({

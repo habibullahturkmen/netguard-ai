@@ -74,6 +74,17 @@ sudo venv/bin/python sensors/live_sniffer.py \
 
 Replace `wlo1` with your network interface (`ip link`).
 
+### Whitelist (local testing vs production)
+
+The backend skips analysis for traffic **to** whitelisted destination IPs only (outbound LAN traffic is still scored).
+
+| Profile | `backend/.env` |
+|---------|----------------|
+| **Local testing** (default) | `WHITELIST_ENABLED=false` |
+| **Production / demo** | `WHITELIST_ENABLED=true` and `WHITELIST_PREFIXES=127.,192.168.` |
+
+Restart the backend after changing `.env`.
+
 ---
 
 ## Development notes
