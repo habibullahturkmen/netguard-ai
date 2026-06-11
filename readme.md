@@ -85,6 +85,11 @@ The backend skips analysis for traffic **to** whitelisted destination IPs only (
 
 Restart the backend after changing `.env`.
 
+See also:
+
+- [docs/features-v1.md](docs/features-v1.md) — detection capabilities and limits
+- [docs/testing-the-project.md](docs/testing-the-project.md) — step-by-step tests (including hping3 SYN flood)
+
 ---
 
 ## Development notes
