@@ -2,66 +2,39 @@
 
 Network intrusion detection demo: live packet capture → Express backend → FastAPI ML service → PostgreSQL → React dashboard.
 
-## Setup
+## Documentation
 
-### 1. Train the ML model (required on fresh clone)
+| Doc | Contents |
+|-----|----------|
+| **[docs/testing-the-project.md](docs/testing-the-project.md)** | **Full install (Windows + Linux), train model, prerequisites, smoke tests, all test cases** |
+| [docs/features-v1.md](docs/features-v1.md) | Detection capabilities and limits |
 
-Model artifacts (`model.pkl`, `encoders.pkl`) are gitignored. Generate them before starting the ML service:
+## Quick start (Linux)
 
-```bash
-cd ml-service
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-cd model
-# Place NSL-KDD-Train.csv in this directory, then:
-python train_real_dataset.py
-```
-
-Do **not** use `train_sample.py` for production — it trains on 3 features only and is incompatible with `app.py`. Use `train_real_dataset.py`.
-
-### 2. PostgreSQL
-
-Create the database and apply the schema:
+After clone, you **must train the model locally** — `model.pkl` and `encoders.pkl` are not in GitHub.
 
 ```bash
-psql -U postgres -c "CREATE USER netguard_user WITH PASSWORD 'your_password';"
-psql -U postgres -c "CREATE DATABASE netguard_ai OWNER netguard_user;"
+# 1. Database
+sudo -u postgres psql -c "CREATE USER netguard_user WITH PASSWORD 'your_password';"
+sudo -u postgres psql -c "CREATE DATABASE netguard_ai OWNER netguard_user;"
 psql -U netguard_user -d netguard_ai -f backend/src/db/schema.sql
+
+# 2. ML model
+cd ml-service && python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+cd model && python train_real_dataset.py   # needs NSL-KDD-Train.csv
+
+# 3. Apps
+cd ../../backend && pnpm install
+cd ../frontend && pnpm install
+# Create backend/.env and frontend/.env — see testing doc
 ```
 
-Configure environment variables in `backend/.env` and `frontend/.env` (see existing files for required keys).
+Start services (3 terminals): ML `:8000` → backend `:5000` → frontend `:5173`.
 
-### 3. Start services
+**Windows, env templates, verification steps, and hping3 tests:** see [docs/testing-the-project.md](docs/testing-the-project.md).
 
-**ML service** (port 8000):
-
-```bash
-cd ml-service
-source venv/bin/activate
-uvicorn app:app --reload --host 127.0.0.1 --port 8000
-```
-
-**Backend** (port 5000):
-
-```bash
-cd backend
-pnpm install
-pnpm dev
-```
-
-**Frontend** (port 5173):
-
-```bash
-cd frontend
-pnpm install
-pnpm dev
-```
-
-Open the dashboard at `http://localhost:5173`.
-
-### 4. Live capture (optional, requires root)
+## Live capture (optional)
 
 ```bash
 cd ml-service
@@ -72,48 +45,20 @@ sudo venv/bin/python sensors/live_sniffer.py \
   --send-threshold 3
 ```
 
-Replace `wlo1` with your network interface (`ip link`).
+Replace `wlo1` with your interface (`ip link` on Linux).
 
-### Whitelist (local testing vs production)
-
-The backend skips analysis for traffic **to** whitelisted destination IPs only (outbound LAN traffic is still scored).
+## Whitelist
 
 | Profile | `backend/.env` |
 |---------|----------------|
-| **Local testing** (default) | `WHITELIST_ENABLED=false` |
-| **Production / demo** | `WHITELIST_ENABLED=true` and `WHITELIST_PREFIXES=127.,192.168.` |
+| Local testing | `WHITELIST_ENABLED=false` |
+| Production / demo | `WHITELIST_ENABLED=true` |
 
-Restart the backend after changing `.env`.
-
-See also:
-
-- [docs/features-v1.md](docs/features-v1.md) — detection capabilities and limits
-- [docs/testing-the-project.md](docs/testing-the-project.md) — step-by-step tests (including hping3 SYN flood)
+Restart backend after changing `.env`.
 
 ---
 
 ## Development notes
-
-### Charts
-
-Example counts for bar charts:
-
-```js
-const suspicious = logs.filter(log => log.prediction === "Suspicious").length;
-const normal = logs.length - suspicious;
-```
-
-### Dataset
-
-For the final project, replace `sample_data.csv` with a cleaned subset of CICIDS2017 so the report can reference a real intrusion-detection dataset.
-
-### Optional: request validation
-
-```bash
-npm install zod
-```
-
-Validate `duration > 0`, `src_bytes >= 0`, `dst_bytes >= 0` before sending data to the ML model.
 
 ### Report statement
 

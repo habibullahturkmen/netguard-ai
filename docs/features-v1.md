@@ -2,6 +2,8 @@
 
 Network intrusion detection demo: live packet capture → Express backend → FastAPI ML service → PostgreSQL → React dashboard.
 
+**Install, train model, and test:** see [testing-the-project.md](./testing-the-project.md).
+
 ## Pipeline
 
 ```mermaid
@@ -60,8 +62,6 @@ Result: **Suspicious**, confidence **1.0**, `model_label: "rule:detection"`.
 - Aggregates traffic **per destination IP** over a **5s window**
 - Builds KDD-style features (count, `serror_rate`, bytes, etc.)
 - POSTs to `/api/analyze`
-
-Also available: `flow_aggregator.py` (similar, class-based aggregator).
 
 ---
 
