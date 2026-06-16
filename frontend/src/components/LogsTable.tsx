@@ -16,7 +16,7 @@ export default function LogsTable({
         <th>Destination</th>
         <th>Protocol</th>
         <th>Prediction</th>
-        <th>Confidence</th>
+        <th>Attack Prob.</th>
         <th>Duration</th>
         <th>Protocol Type</th>
         <th>Service</th>
@@ -43,7 +43,7 @@ export default function LogsTable({
           >
             {log.prediction}
           </td>
-          <td>{log.confidence}</td>
+          <td>{(Number(log.confidence) * 100).toFixed(1)}%</td>
           <td>{log.duration}</td>
           <td>{log.protocol_type}</td>
           <td>{log.service}</td>
