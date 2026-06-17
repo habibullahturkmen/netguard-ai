@@ -6,7 +6,8 @@ Network intrusion detection demo: live packet capture → Express backend → Fa
 
 | Doc | Contents |
 |-----|----------|
-| **[docs/testing-the-project.md](docs/testing-the-project.md)** | **Full install (Windows + Linux), train model, prerequisites, smoke tests, all test cases** |
+| **[docs/attack-readme.md](docs/attack-readme.md)** | **Attack demos: DoS, port scan, hping3, nmap, alert chain** |
+| [docs/testing-the-project.md](docs/testing-the-project.md) | Full install (Windows + Linux), train model, smoke tests |
 | [docs/features-v1.md](docs/features-v1.md) | Detection capabilities and limits |
 
 ## Quick start (Linux)

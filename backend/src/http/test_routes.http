@@ -2,24 +2,19 @@ POST http://localhost:5000/api/analyze
 Content-Type: application/json
 
 {
-"source_ip": "192.168.1.10",
-"destination_ip": "8.8.8.8",
-"protocol": "TCP",
-
-"service": "http",
-"flag": "SF",
-
-"duration": 12,
-"src_bytes": 5000,
-"dst_bytes": 3000
+  "source_ip": "192.168.1.10",
+  "destination_ip": "8.8.8.8",
+  "protocol": "tcp",
+  "service": "http",
+  "flag": "SF",
+  "duration": 12,
+  "src_bytes": 5000,
+  "dst_bytes": 3000
 }
 
 ###
 
-
-# curl -v -X POST http://127.0.0.1:5000/api/analyze
-#-H "Content-Type: application/json"
-#-d '{ "destination_ip":"192.168.1.16", "source_ip":"192.168.2.14", "duration":5.0, "protocol":"tcp", "service":"other", "flag":"SF", "src_bytes":0, "dst_bytes":0, "count":200, "srv_count":200, "serror_rate":0.95, "dst_host_count":180 }'
+# Test 2 — Rule-based DoS (curl, no tools)
 POST http://127.0.0.1:5000/api/analyze
 Content-Type: application/json
 
@@ -39,3 +34,47 @@ Content-Type: application/json
 }
 
 ###
+
+# Test 3 — Rule-based Port Scan (curl, no tools)
+POST http://127.0.0.1:5000/api/analyze
+Content-Type: application/json
+
+{
+  "destination_ip": "192.168.1.20",
+  "source_ip": "192.168.1.10",
+  "duration": 5.0,
+  "protocol": "tcp",
+  "service": "other",
+  "flag": "REJ",
+  "src_bytes": 0,
+  "dst_bytes": 0,
+  "count": 80,
+  "srv_count": 5,
+  "serror_rate": 0.1,
+  "dst_host_count": 1,
+  "unique_dport_count": 25
+}
+
+###
+
+# Test 4 — Alert chain: send Test 2 payload 3× to same destination_ip (10.0.0.99)
+POST http://127.0.0.1:5000/api/analyze
+Content-Type: application/json
+
+{
+  "destination_ip": "10.0.0.99",
+  "source_ip": "192.168.2.14",
+  "protocol": "tcp",
+  "service": "other",
+  "count": 200,
+  "serror_rate": 0.95,
+  "dst_host_count": 180
+}
+
+###
+
+GET http://127.0.0.1:5000/api/alerts
+
+###
+
+GET http://127.0.0.1:5000/api/logs

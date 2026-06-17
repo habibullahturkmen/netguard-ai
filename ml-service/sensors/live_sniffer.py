@@ -114,6 +114,7 @@ def compute_features(dst, entry, window_seconds):
         "dst_bytes": dst_bytes,
         "count": count,
         "srv_count": srv_count,
+        "unique_dport_count": len(entry["unique_dports"]),
         "serror_rate": round(serror_rate, 3),
         "srv_serror_rate": round(srv_serror_rate, 3),
         "rerror_rate": 0.0,
@@ -164,18 +165,17 @@ def flush_worker(window_seconds, send_threshold):
             resp = send_aggregate(f)
             if resp:
                 ml = resp.get("ml") or resp.get("ml_response") or resp
-                # print concise result
+                attack_type = resp.get("attack_type_label") or resp.get("attack_type") or "—"
                 if isinstance(ml, dict):
                     pred = ml.get("prediction", "<no-pred>")
                     conf = float(ml.get("confidence", 0.0))
                 else:
-                    # fallback if backend returns flat ml keys
                     pred = resp.get("prediction", "<no-pred>")
                     conf = float(resp.get("confidence", 0.0))
                 if pred == "Suspicious" and conf >= ALERT_CONFIDENCE_THRESHOLD:
-                    print(f"[ALERT] {pred} conf={conf:.2f} dst={f['destination_ip']} count={f['count']}")
+                    print(f"[ALERT] {pred} type={attack_type} conf={conf:.2f} dst={f['destination_ip']} count={f['count']} ports={f.get('unique_dport_count', 0)}")
                 else:
-                    print(f"[OK] {pred} conf={conf:.2f} dst={f['destination_ip']} count={f['count']}")
+                    print(f"[OK] {pred} type={attack_type} conf={conf:.2f} dst={f['destination_ip']} count={f['count']}")
 
 def packet_handler(pkt):
     with state_lock:

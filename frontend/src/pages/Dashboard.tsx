@@ -1,52 +1,44 @@
-import { useEffect, useState, } from "react";
-import { fetchLogs, } from "../api/logApi";
-import type { TrafficLog, } from "../types/TrafficLog";
+import { useEffect, useState } from "react";
+import { fetchAlerts, fetchLogs } from "../api/logApi";
+import type { Alert, TrafficLog } from "../types/TrafficLog";
 import StatsCards from "../components/StatsCards";
 import LogsTable from "../components/LogsTable";
+import AlertsTable from "../components/AlertsTable";
 import TrafficChart from "../components/TrafficChart";
-import AnalyticsCharts from "../components/AnalyticsCharts.tsx"
+import AnalyticsCharts from "../components/AnalyticsCharts.tsx";
 
 import "../styles/dashboard.css";
 
 export default function Dashboard() {
-
-  const [logs, setLogs] =
-    useState<TrafficLog[]>([]);
+  const [logs, setLogs] = useState<TrafficLog[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
 
   useEffect(() => {
-    const loadLogs = async () => {
+    const load = async () => {
       try {
-        const data = await fetchLogs();
-        setLogs(data);
+        const [logData, alertData] = await Promise.all([fetchLogs(), fetchAlerts()]);
+        setLogs(logData);
+        setAlerts(alertData);
       } catch {
-        // keep existing logs on transient fetch failures
+        // keep existing data on transient fetch failures
       }
     };
 
-    loadLogs();
-    const interval = setInterval(loadLogs, 5000);
+    load();
+    const interval = setInterval(load, 5000);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="dashboard">
+      <h1>🛡️ NetGuard AI Dashboard</h1>
 
-      <h1>
-        🛡️ NetGuard AI Dashboard
-      </h1>
+      <StatsCards logs={logs} />
+      <TrafficChart logs={logs} />
+      <AnalyticsCharts logs={logs} />
 
-      {/*<div className="overview-section">*/}
-        <StatsCards logs={logs} />
-
-        <TrafficChart logs={logs} />
-      {/*</div>*/}
-
-      <AnalyticsCharts logs={logs}/>
-
-      <LogsTable
-        logs={logs}
-      />
-
+      <AlertsTable alerts={alerts} />
+      <LogsTable logs={logs} />
     </div>
   );
 }
