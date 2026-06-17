@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchAlerts, fetchLogs } from "../api/logApi";
+import { fetchAlerts, fetchLogsRecent } from "../api/logApi";
 import type { Alert, TrafficLog } from "../types/TrafficLog";
 import StatsCards from "../components/StatsCards";
 import LogsTable from "../components/LogsTable";
@@ -16,7 +16,7 @@ export default function Dashboard() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [logData, alertData] = await Promise.all([fetchLogs(), fetchAlerts()]);
+        const [logData, alertData] = await Promise.all([fetchLogsRecent(), fetchAlerts()]);
         setLogs(logData);
         setAlerts(alertData);
       } catch {
@@ -38,7 +38,7 @@ export default function Dashboard() {
       <AnalyticsCharts logs={logs} />
 
       <AlertsTable alerts={alerts} />
-      <LogsTable logs={logs} />
+      <LogsTable />
     </div>
   );
 }
