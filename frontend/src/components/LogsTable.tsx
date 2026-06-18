@@ -34,8 +34,7 @@ export default function LogsTable() {
 
   return (
     <div className="table-wrapper">
-      <div className="table-header">
-        <h2>Traffic Logs</h2>
+      <div className="table-toolbar">
         <span className="table-meta">
           {total === 0
             ? "No logs"
