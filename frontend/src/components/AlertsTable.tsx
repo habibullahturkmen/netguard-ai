@@ -7,7 +7,8 @@ interface Props {
 
 export default function AlertsTable({ alerts }: Props) {
   return (
-    <div className="table-wrapper">
+    <div className="table-wrapper table-wrapper-dark">
+      <h3 className="section-title">Alerts</h3>
       {alerts.length === 0 ? (
         <p className="empty-hint">No alerts yet. Trigger 3 consecutive suspicious events to the same destination.</p>
       ) : (

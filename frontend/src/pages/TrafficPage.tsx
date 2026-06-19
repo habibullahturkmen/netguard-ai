@@ -11,9 +11,7 @@ export default function TrafficPage() {
         title="Traffic"
         description="Normal vs suspicious traffic distribution."
       />
-      <div className="chart-card chart-card-wide">
-        <TrafficChart logs={logs} />
-      </div>
+      <TrafficChart logs={logs} />
     </div>
   );
 }

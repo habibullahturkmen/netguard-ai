@@ -33,7 +33,8 @@ export default function LogsTable() {
   const rangeEnd = Math.min(page * PAGE_SIZE, total);
 
   return (
-    <div className="table-wrapper">
+    <div className="table-wrapper table-wrapper-dark">
+      <h3 className="section-title">Traffic Logs</h3>
       <div className="table-toolbar">
         <span className="table-meta">
           {total === 0
