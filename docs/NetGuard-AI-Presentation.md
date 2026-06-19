@@ -4,15 +4,9 @@
 
 *A Lightweight Machine Learning-Based Network Monitoring and Intrusion Detection System*
 
-**Visual style:** Humber Polytechnic brand — Dark Blue `#000033` · Gold `#CC9900` · White text
-
-**Slide images:** `docs/presentation-images/` — 16 slides (Humber brand `#000033` / `#CC9900`)
-
 **Written report:** [NetGuard-AI-Written-Report.docx](NetGuard-AI-Written-Report.docx) — full APA report alongside slides
 
 **Speaker notes:** [presentation-speaker-notes.md](presentation-speaker-notes.md) — what to say on each slide
-
-**References (full bibliography):** [presentation-references.md](presentation-references.md) — APA 7th edition
 
 ---
 
