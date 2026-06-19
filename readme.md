@@ -6,8 +6,8 @@ Network intrusion detection demo: live packet capture → Express backend → Fa
 
 | Doc | Contents |
 |-----|----------|
-| **[docs/NetGuard-AI-Written-Report.md](docs/NetGuard-AI-Written-Report.md)** | **Written report (APA 7) — submit alongside slides** |
-| [docs/presentation-slides](docs/presentation-slides.pdf) | Humber-branded slide graphics (PNG) |
+| **[docs/NetGuard-AI-Written-Report.docx](docs/NetGuard-AI-Written-Report.docx)** | **Written report (APA 7) — submit alongside slides** |
+| [docs/presentation-slides.pdf](docs/presentation-slides.pdf) | Slides for Presentation |
 | **[docs/attack-readme.md](docs/attack-readme.md)** | **Attack demos: DoS, port scan, hping3, nmap, alert chain** |
 | [docs/testing-the-project.md](docs/testing-the-project.md) | Full install (Windows + Linux), train model, smoke tests |
 | [docs/features-v1.md](docs/features-v1.md) | Detection capabilities and limits |

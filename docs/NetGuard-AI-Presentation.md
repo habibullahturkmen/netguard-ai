@@ -4,21 +4,13 @@
 
 *A Lightweight Machine Learning-Based Network Monitoring and Intrusion Detection System*
 
-**Visual style:** Humber Polytechnic brand — Dark Blue `#000033` · Gold `#CC9900` · White text
-
-**Slide images:** `docs/presentation-images/` — 16 slides (Humber brand `#000033` / `#CC9900`)
-
-**Written report:** [NetGuard-AI-Written-Report.md](NetGuard-AI-Written-Report.md) — full APA report alongside slides
+**Written report:** [NetGuard-AI-Written-Report.docx](NetGuard-AI-Written-Report.docx) — full APA report alongside slides
 
 **Speaker notes:** [presentation-speaker-notes.md](presentation-speaker-notes.md) — what to say on each slide
-
-**References (full bibliography):** [presentation-references.md](presentation-references.md) — APA 7th edition
 
 ---
 
 ## Slide 1 — Title
-
-![Title slide — Humber brand](presentation-images/slide-01-title-humber.png)
 
 **NetGuard AI**
 
@@ -32,8 +24,6 @@ Machine Learning-Based Network Monitoring & Intrusion Detection
 ---
 
 ## Slide 2 — Introduction
-
-![Introduction — Humber brand](presentation-images/slide-02-introduction-humber.png)
 
 Modern networks face growing threats: unauthorized access, port scanning, and denial-of-service attacks.
 
@@ -55,8 +45,6 @@ Traditional IDS tools often rely on **fixed signatures and manual rules**. They 
 
 ## Slide 3 — Problem Statement
 
-![Problem statement — Humber brand](presentation-images/slide-03-problem-statement-humber.png)
-
 | Challenge | Why it matters |
 |-----------|----------------|
 | Signature-based tools need constant updates | Miss zero-day and behavioral attacks |
@@ -69,8 +57,6 @@ Traditional IDS tools often rely on **fixed signatures and manual rules**. They 
 ---
 
 ## Slide 4 — Project Objectives
-
-![Project objectives — Humber brand](presentation-images/slide-04-objectives-humber.png)
 
 ### Main objective
 
@@ -90,8 +76,6 @@ Design and implement an ML-based network monitoring system that detects suspicio
 ---
 
 ## Slide 5 — Scope of the Project
-
-![Scope — Humber brand](presentation-images/slide-05-scope-humber.png)
 
 ### Included (as proposed)
 
@@ -120,8 +104,6 @@ Design and implement an ML-based network monitoring system that detects suspicio
 
 ## Slide 6 — Methodology
 
-![Methodology pipeline — Humber brand](presentation-images/slide-06-methodology-humber.png)
-
 | Phase | Proposal | What we did |
 |-------|----------|-------------|
 | **1. Dataset** | Study NSL-KDD, CICIDS2017 | Trained on **NSL-KDD** (`train_real_dataset.py`) |
@@ -134,8 +116,6 @@ Design and implement an ML-based network monitoring system that detects suspicio
 ---
 
 ## Slide 7 — System Architecture
-
-![System architecture — Humber brand](presentation-images/slide-07-architecture-humber.png)
 
 ```mermaid
 flowchart LR
@@ -165,8 +145,6 @@ flowchart LR
 ---
 
 ## Slide 8 — Detection Methods
-
-![Detection flow — Humber brand](presentation-images/slide-08-detection-flow-humber.png)
 
 ### Machine learning
 
@@ -199,8 +177,6 @@ Triggers when **both** are true:
 
 ## Slide 9 — Database Design
 
-![Database design — Humber brand](presentation-images/slide-09-database-humber.png)
-
 ### Table: `traffic_logs`
 
 | Field | Description |
@@ -225,8 +201,6 @@ Fields include: source/destination IP, attack_type, confidence, features (JSON),
 
 ## Slide 10 — Web Dashboard
 
-![Dashboard mockup — Humber brand](presentation-images/slide-10-dashboard-humber.png)
-
 Multi-page React UI with sticky navigation:
 
 | Page | Purpose |
@@ -243,8 +217,6 @@ Multi-page React UI with sticky navigation:
 ---
 
 ## Slide 11 — Evaluation Metrics
-
-![Evaluation metrics — Humber brand](presentation-images/slide-11-evaluation-humber.png)
 
 ### ML model (NSL-KDD training)
 
@@ -267,8 +239,6 @@ Multi-page React UI with sticky navigation:
 
 ## Slide 12 — Demo Scenarios (Lab Only)
 
-![Demo scenarios — Humber brand](presentation-images/slide-12-demo-scenarios-humber.png)
-
 | # | Scenario | How to trigger | Expected result |
 |---|----------|----------------|-----------------|
 | 1 | Normal traffic | curl with typical HTTP flow | Normal, attack_type none |
@@ -284,8 +254,6 @@ Multi-page React UI with sticky navigation:
 
 ## Slide 13 — Expected Outcomes
 
-![Expected outcomes — Humber brand](presentation-images/slide-13-outcomes-humber.png)
-
 | Outcome (proposal) | Achieved |
 |--------------------|----------|
 | Classify traffic as normal or suspicious | ✅ ML + rules |
@@ -297,8 +265,6 @@ Multi-page React UI with sticky navigation:
 ---
 
 ## Slide 14 — Conclusion
-
-![Conclusion — Humber brand](presentation-images/slide-14-conclusion-humber.png)
 
 **NetGuard AI** delivers a practical, lightweight approach to network intrusion detection:
 
@@ -320,11 +286,11 @@ The project shows how AI can support network security in **educational and small
 
 ## Slide 15 — References (APA 7)
 
-![References — Humber brand](presentation-images/slide-15-references-humber.png)
-
 ### References
 
 Breiman, L. (2001). Random forests. *Machine Learning*, *45*(1), 5–32. https://doi.org/10.1023/A:1010933404324
+
+Cyber Experts. (2025). *NetGuard AI: Final group project proposal* [Unpublished manuscript]. Humber Polytechnic.
 
 Garcia-Teodoro, P., Diaz-Verdejo, J., Maciá-Fernández, G., & Vázquez, E. (2009). Anomaly-based network intrusion detection: Techniques, systems and challenges. *Computers & Security*, *28*(1–2), 18–28. https://doi.org/10.1016/j.cose.2008.08.003
 
@@ -335,16 +301,13 @@ Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O.,
 Sharafaldin, I., Lashkari, A. H., & Ghorbani, A. A. (2018). Toward generating a new intrusion detection dataset and intrusion traffic characterization. In *Proceedings of the 4th International Conference on Information Systems Security and Privacy* (pp. 108–116). SCITEPRESS. https://doi.org/10.5220/0006639801080116
 
 Tavallaee, M., Bagheri, E., Lu, W., & Ghorbani, A. A. (2009). A detailed analysis of the KDD CUP 99 data set. In *2009 IEEE Symposium on Computational Intelligence for Security and Defense Applications* (pp. 1–6). IEEE. https://doi.org/10.1109/CISDA.2009.5356528
-
-Cyber Experts. (2025). *NetGuard AI: Final group project proposal* [Unpublished manuscript]. Humber Polytechnic.
+*(NSL-KDD training dataset)*
 
 *Software and tools — continued on Slide 16. Full list in [written report](NetGuard-AI-Written-Report.md).*
 
 ---
 
 ## Slide 16 — References (continued)
-
-![References continued — Humber brand](presentation-images/slide-16-references-continued-humber.png)
 
 ### References (continued)
 
