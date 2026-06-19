@@ -6,11 +6,8 @@ Network intrusion detection demo: live packet capture → Express backend → Fa
 
 | Doc | Contents |
 |-----|----------|
-| **[docs/NetGuard-AI-Presentation.md](docs/NetGuard-AI-Presentation.md)** | **Project presentation (16 slides + Humber images)** |
 | **[docs/NetGuard-AI-Written-Report.md](docs/NetGuard-AI-Written-Report.md)** | **Written report (APA 7) — submit alongside slides** |
-| **[docs/presentation-speaker-notes.md](docs/presentation-speaker-notes.md)** | **Speaker notes — what to say on each slide** |
-| **[docs/presentation-references.md](docs/presentation-references.md)** | **References — APA 7th edition (full list + in-text guide)** |
-| [docs/presentation-images/](docs/presentation-images/) | Humber-branded slide graphics (PNG) |
+| [docs/presentation-slides](docs/presentation-slides.pdf) | Humber-branded slide graphics (PNG) |
 | **[docs/attack-readme.md](docs/attack-readme.md)** | **Attack demos: DoS, port scan, hping3, nmap, alert chain** |
 | [docs/testing-the-project.md](docs/testing-the-project.md) | Full install (Windows + Linux), train model, smoke tests |
 | [docs/features-v1.md](docs/features-v1.md) | Detection capabilities and limits |
@@ -69,3 +66,63 @@ Restart backend after changing `.env`.
 ### Report statement
 
 The Random Forest classifier was trained using a processed subset of the NSL-KDD intrusion detection dataset. The model was configured as a binary classifier, categorizing network traffic into Normal and Suspicious classes. Performance was evaluated using accuracy, precision, recall, and F1-score metrics.
+
+---
+
+## References
+
+Antirez. (n.d.). *hping3* [Computer software]. GitHub. https://github.com/antirez/hping
+
+axios contributors. (n.d.). *axios* [Computer software]. https://axios-http.com/
+
+Biondi, P. (n.d.). *Scapy* (Version 2) [Computer software]. https://scapy.net/
+
+Breiman, L. (2001). Random forests. *Machine Learning*, *45*(1), 5–32. https://doi.org/10.1023/A:1010933404324
+
+Bristol, B., & contributors. (n.d.). *node-postgres* [Computer software]. https://node-postgres.com/
+
+Chart.js contributors. (n.d.). *Chart.js* (Version 4) [Computer software]. https://www.chartjs.org/
+
+Cyber Experts. (2025). *NetGuard AI: Final group project proposal* [Unpublished manuscript]. Humber Polytechnic.
+
+Encode OSS Ltd. (n.d.). *Uvicorn* [Computer software]. https://www.uvicorn.org/
+
+Garcia-Teodoro, P., Diaz-Verdejo, J., Maciá-Fernández, G., & Vázquez, E. (2009). Anomaly-based network intrusion detection: Techniques, systems and challenges. *Computers & Security*, *28*(1–2), 18–28. https://doi.org/10.1016/j.cose.2008.08.003
+
+Joblib developers. (n.d.). *joblib* [Computer software]. https://joblib.readthedocs.io/
+
+Lippmann, R., Fried, D., Graf, I., Haines, J. W., Kendall, K. R., McClung, D., Weber, D., Webster, S. E., Wohlstein, D., Cunningham, R. K., & Zissman, M. A. (2000). Evaluating intrusion detection systems: The 1998 DARPA off-line intrusion detection evaluation. In *Proceedings of the 2000 DARPA Information Survivability Conference and Exposition* (Vol. 2, pp. 12–26). IEEE.
+
+Lyon, G. F. (n.d.). *Nmap* [Computer software]. https://nmap.org/
+
+Meta Platforms, Inc. (n.d.). *React* (Version 19) [Computer software]. https://react.dev/
+
+Microsoft. (n.d.). *TypeScript* [Computer software]. https://www.typescriptlang.org/
+
+OpenJS Foundation. (n.d.-a). *Express* (Version 5) [Computer software]. https://expressjs.com/
+
+OpenJS Foundation. (n.d.-b). *Node.js* [Computer software]. https://nodejs.org/
+
+Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J., Passos, A., Cournapeau, D., Brucher, M., Perrot, M., & Duchesnay, E. (2011). Scikit-learn: Machine learning in Python. *Journal of Machine Learning Research*, *12*, 2825–2830. https://jmlr.org/papers/v12/pedregosa11a.html
+
+PostgreSQL Global Development Group. (n.d.). *PostgreSQL* (Version 15) [Database software]. https://www.postgresql.org/
+
+Python Software Foundation. (n.d.). *Python* (Version 3) [Computer software]. https://www.python.org/
+
+Ramírez, S. (n.d.). *FastAPI* [Computer software]. https://fastapi.tiangolo.com/
+
+react-chartjs-2 contributors. (n.d.). *react-chartjs-2* [Computer software]. https://react-chartjs-2.js.org/
+
+Remix Software Inc. (n.d.). *React Router* (Version 7) [Computer software]. https://reactrouter.com/
+
+Sharafaldin, I., Lashkari, A. H., & Ghorbani, A. A. (2018). Toward generating a new intrusion detection dataset and intrusion traffic characterization. In *Proceedings of the 4th International Conference on Information Systems Security and Privacy* (pp. 108–116). SCITEPRESS. https://doi.org/10.5220/0006639801080116
+
+Stenberg, D., & contributors. (n.d.). *curl* [Computer software]. https://curl.se/
+
+Tavallaee, M., Bagheri, E., Lu, W., & Ghorbani, A. A. (2009). A detailed analysis of the KDD CUP 99 data set. In *2009 IEEE Symposium on Computational Intelligence for Security and Defense Applications* (pp. 1–6). IEEE. https://doi.org/10.1109/CISDA.2009.5356528
+
+The pandas development team. (n.d.). *pandas* [Computer software]. https://pandas.pydata.org/
+
+Vite Team. (n.d.). *Vite* (Version 8) [Computer software]. https://vite.dev/
+
+---
