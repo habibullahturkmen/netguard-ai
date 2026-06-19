@@ -2,7 +2,8 @@
 
 Network intrusion detection demo: live packet capture → Express backend → FastAPI ML service → PostgreSQL → React dashboard.
 
-**Install, train model, and test:** see [testing-the-project.md](./testing-the-project.md).
+**Install, train model, and test:** see [testing-the-project.md](./testing-the-project.md).  
+**Attack demos:** see [attack-readme.md](./attack-readme.md).
 
 ## Pipeline
 
@@ -32,7 +33,7 @@ flowchart LR
 
 **What it is:** general anomaly/intrusion scoring from flow stats.
 
-**What it is not:** attack-type labels (no “SQL injection”, “port scan”, etc.) — only binary Normal/Suspicious.
+**What it is not:** per-packet attack naming from ML alone — rules label DoS/port scan; ML returns generic `ml_anomaly`.
 
 ---
 
@@ -46,15 +47,24 @@ Bypasses ML when **all three** conditions are true:
 | `serror_rate` | ≥ 0.8 |
 | `dst_host_count` | ≥ 50 unique sources |
 
-Result: **Suspicious**, confidence **1.0**, `model_label: "rule:detection"`.
-
-**What it is:** a simple **SYN-flood / DoS-style heuristic** (high volume + high SYN error rate + many sources).
-
-**What it is not:** DDoS mitigation, rate limiting, or firewall blocking.
+Result: **Suspicious**, `attack_type: dos`, confidence **1.0**.
 
 ---
 
-### 3. Live packet capture
+### 3. Rule-based port scan detection
+
+Bypasses ML when **both** conditions are true:
+
+| Condition | Default threshold |
+|-----------|-------------------|
+| `count` | ≥ 50 packets/window |
+| `unique_dport_count` | ≥ 20 distinct destination ports |
+
+Result: **Suspicious**, `attack_type: port_scan`, confidence **1.0**.
+
+---
+
+### 4. Live packet capture
 
 `live_sniffer.py`:
 
@@ -65,7 +75,7 @@ Result: **Suspicious**, confidence **1.0**, `model_label: "rule:detection"`.
 
 ---
 
-### 4. Alert engine (backend only)
+### 5. Alert engine (backend + dashboard)
 
 After scoring, the backend tracks **per destination IP**:
 
@@ -73,12 +83,11 @@ After scoring, the backend tracks **per destination IP**:
 - Must pass **numeric gate** (≥3 packets, or ≥5 sources, or `serror_rate` ≥ 0.3)
 - **5-minute cooldown** between alerts to the same destination
 - Writes to the **`alerts`** table (with feature JSON)
-
-**Note:** alerts are stored in the database but **not shown in the dashboard** yet. Check via SQL or the API response field `alerted: true`.
+- **Alerts panel** on dashboard (`GET /api/alerts`)
 
 ---
 
-### 5. IP whitelist (optional)
+### 6. IP whitelist (optional)
 
 - Controlled by `WHITELIST_ENABLED` in `backend/.env`
 - **Local default:** `false` (analyze everything)
@@ -89,12 +98,12 @@ See [readme.md](../readme.md#whitelist-local-testing-vs-production) for dev vs p
 
 ---
 
-### 6. Dashboard (frontend)
+### 7. Dashboard (frontend)
 
 - Stats cards (total, normal, suspicious, avg bytes)
-- Traffic bar chart
-- Pie charts (status, protocol, service, flags)
-- Logs table with **Attack Prob.** column
+- Traffic bar chart + pie charts
+- **Alerts table** (attack type, destination, time)
+- **Traffic logs** with **Attack Type** column and attack probability
 - Auto-refreshes every **5 seconds**
 
 ---
@@ -104,10 +113,8 @@ See [readme.md](../readme.md#whitelist-local-testing-vs-production) for dev vs p
 | Missing | Notes |
 |---------|--------|
 | Block/mitigate attacks | Detection + logging only |
-| Attack type labels | No “DDoS vs probe vs malware” |
-| Alerts in UI | Stored in DB, not on dashboard |
+| L7 attacks (SQLi, XSS) | Network flow features only |
 | Email/Slack notifications | Not implemented |
-| Distributed multi-node capture | Single sniffer process |
 | Persistent alert state | In-memory Map; resets on backend restart |
 
 ---
@@ -123,6 +130,8 @@ See [readme.md](../readme.md#whitelist-local-testing-vs-production) for dev vs p
 | `DOS_COUNT_THRESHOLD` | 200 | Rule-based DoS |
 | `DOS_SERROR_THRESHOLD` | 0.8 | Rule-based DoS |
 | `DOS_DST_HOST_COUNT` | 50 | Rule-based DoS |
+| `SCAN_COUNT_THRESHOLD` | 50 | Rule-based port scan |
+| `SCAN_UNIQUE_DPORT_THRESHOLD` | 20 | Rule-based port scan |
 | `WHITELIST_ENABLED` | false | Skip whitelisted destinations |
 
 ---

@@ -2,55 +2,57 @@ import {
   Chart as ChartJS,
   ArcElement,
   Tooltip,
-  Legend
+  Legend,
 } from "chart.js";
-
 import { Pie } from "react-chartjs-2";
+import { chartDefaults, piePalette } from "../theme/humberTheme";
 
-ChartJS.register(
-  ArcElement,
-  Tooltip,
-  Legend
-);
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface Props {
   title: string;
   labels: string[];
   values: number[];
+  variant?: "card" | "panel";
 }
 
 export default function PieChart({
   title,
   labels,
-  values
+  values,
+  variant = "card",
 }: Props) {
+  const colors = piePalette.slice(0, labels.length);
 
   const data = {
     labels,
     datasets: [
       {
         data: values,
-        backgroundColor: [
-          "#2563eb",
-          "#16a34a",
-          "#dc2626",
-          "#f59e0b",
-          "#8b5cf6",
-          "#06b6d4",
-          "#ec4899"
-        ]
-      }
-    ]
+        backgroundColor: colors,
+        borderColor: "rgba(0, 0, 51, 0.4)",
+        borderWidth: 2,
+      },
+    ],
   };
 
+  const options = {
+    plugins: {
+      legend: {
+        labels: {
+          color: chartDefaults.color,
+          padding: 14,
+        },
+      },
+    },
+  };
+
+  const wrapperClass = variant === "panel" ? "chart-panel" : "chart-card";
+
   return (
-
-    <div className="chart-card">
-
-      <h3>{title}</h3>
-
-      <Pie data={data}/>
-
+    <div className={wrapperClass}>
+      <h3 className={variant === "panel" ? "chart-panel-title" : undefined}>{title}</h3>
+      <Pie data={data} options={options} />
     </div>
   );
 }

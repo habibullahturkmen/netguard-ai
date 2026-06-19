@@ -9,6 +9,7 @@ CREATE TABLE traffic_logs
     protocol       VARCHAR(20),
 
     prediction     VARCHAR(20),
+    attack_type    VARCHAR(30) DEFAULT 'none',
     confidence     DECIMAL(5, 2),
 
     duration       FLOAT,
@@ -31,6 +32,7 @@ CREATE TABLE IF NOT EXISTS alerts
     protocol       VARCHAR(20),
     service        VARCHAR(50),
     prediction     VARCHAR(20),
+    attack_type    VARCHAR(30),
     confidence     DECIMAL(5, 3),
     features       JSONB,
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -53,3 +55,5 @@ CREATE INDEX idx_service
 
 CREATE INDEX IF NOT EXISTS idx_alerts_dest ON alerts (destination_ip);
 CREATE INDEX IF NOT EXISTS idx_alerts_created_at ON alerts (created_at);
+CREATE INDEX IF NOT EXISTS idx_traffic_attack_type ON traffic_logs (attack_type);
+CREATE INDEX IF NOT EXISTS idx_alerts_attack_type ON alerts (attack_type);

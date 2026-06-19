@@ -8,13 +8,12 @@ dotenv.config();
 
 const router = Router();
 
-// Config (adjust via env)
-const ALERT_CONSECUTIVE = Number(process.env.ALERT_CONSECUTIVE || 3); // require N consecutive suspicious windows
-const ALERT_COOLDOWN = Number(process.env.ALERT_COOLDOWN || 300); // seconds
-const MIN_COUNT = Number(process.env.MIN_COUNT || 3); // match live_sniffer SEND_THRESHOLD default
-const MIN_DST_HOST_COUNT = Number(process.env.MIN_DST_HOST_COUNT || 5); // minimal distinct srcs
-const MIN_SERROR_RATE = Number(process.env.MIN_SERROR_RATE || 0.3); // minimal serror_rate to consider
-const ML_THRESHOLD = Number(process.env.ML_THRESHOLD || 0.4); // fallback when ML service omits prediction
+const ALERT_CONSECUTIVE = Number(process.env.ALERT_CONSECUTIVE || 3);
+const ALERT_COOLDOWN = Number(process.env.ALERT_COOLDOWN || 300);
+const MIN_COUNT = Number(process.env.MIN_COUNT || 3);
+const MIN_DST_HOST_COUNT = Number(process.env.MIN_DST_HOST_COUNT || 5);
+const MIN_SERROR_RATE = Number(process.env.MIN_SERROR_RATE || 0.3);
+const ML_THRESHOLD = Number(process.env.ML_THRESHOLD || 0.4);
 const WHITELIST_ENABLED =
   process.env.WHITELIST_ENABLED === "true" || process.env.WHITELIST_ENABLED === "1";
 const WHITELIST_PREFIXES = (process.env.WHITELIST_PREFIXES || "")
@@ -24,8 +23,11 @@ const WHITELIST_PREFIXES = (process.env.WHITELIST_PREFIXES || "")
 const DOS_COUNT_THRESHOLD = Number(process.env.DOS_COUNT_THRESHOLD || 200);
 const DOS_SERROR_THRESHOLD = Number(process.env.DOS_SERROR_THRESHOLD || 0.8);
 const DOS_DST_HOST_COUNT = Number(process.env.DOS_DST_HOST_COUNT || 50);
+const SCAN_COUNT_THRESHOLD = Number(process.env.SCAN_COUNT_THRESHOLD || 50);
+const SCAN_UNIQUE_DPORT_THRESHOLD = Number(process.env.SCAN_UNIQUE_DPORT_THRESHOLD || 20);
 
-// In-memory state (per-destination IP). For production, use Redis.
+type AttackType = "none" | "dos" | "port_scan" | "ml_anomaly";
+
 type StateEntry = { consecutive: number; lastAlertAt?: number; lastSeenAt: number };
 const state = new Map<string, StateEntry>();
 
@@ -33,13 +35,22 @@ function isWhitelisted(ip: string | undefined): boolean {
   if (!ip) return false;
   for (const p of WHITELIST_PREFIXES) {
     if (!p) continue;
-    if (ip.startsWith(p)) return true; // simple prefix match (e.g., "192.168.")
+    if (ip.startsWith(p)) return true;
   }
   return false;
 }
 
 function nowSec(): number {
   return Math.floor(Date.now() / 1000);
+}
+
+function formatAttackType(type: AttackType): string {
+  switch (type) {
+    case "dos": return "DoS";
+    case "port_scan": return "Port Scan";
+    case "ml_anomaly": return "ML Anomaly";
+    default: return "—";
+  }
 }
 
 router.post("/", async (req, res) => {
@@ -56,14 +67,13 @@ router.post("/", async (req, res) => {
       count,
       dst_host_count,
       serror_rate,
+      unique_dport_count,
     } = req.body;
 
-    // Skip traffic TO whitelisted destinations only (outbound LAN traffic still analyzed)
     if (WHITELIST_ENABLED && isWhitelisted(destination_ip)) {
       return res.status(200).json({ message: "Whitelisted - ignored", destination_ip });
     }
 
-    // 2) build features and call ML service
     const features = buildFeatures({
       protocol,
       service,
@@ -74,68 +84,82 @@ router.post("/", async (req, res) => {
       count,
       dst_host_count,
       serror_rate,
+      unique_dport_count,
     });
 
-    const maybeCount = Number(req.body.count ?? 0);
-    const maybeSerror = Number(req.body.serror_rate ?? 0);
-    const maybeDstHosts = Number(req.body.dst_host_count ?? 0);
+    const maybeCount = Number(count ?? req.body.count ?? 0);
+    const maybeSerror = Number(serror_rate ?? 0);
+    const maybeDstHosts = Number(dst_host_count ?? 0);
+    const maybeUniqueDports = Number(
+      unique_dport_count ?? req.body.unique_dport_count ?? 0
+    );
 
-    // If this rule matches, treat as suspicious immediately (bypass ML)
-    const isDeterministicDos = (maybeCount >= DOS_COUNT_THRESHOLD)
-      && (maybeSerror >= DOS_SERROR_THRESHOLD)
-      && (maybeDstHosts >= DOS_DST_HOST_COUNT);
+    const isDeterministicDos =
+      maybeCount >= DOS_COUNT_THRESHOLD &&
+      maybeSerror >= DOS_SERROR_THRESHOLD &&
+      maybeDstHosts >= DOS_DST_HOST_COUNT;
 
-    let mlResponse;
+    const isPortScan =
+      !isDeterministicDos &&
+      maybeCount >= SCAN_COUNT_THRESHOLD &&
+      maybeUniqueDports >= SCAN_UNIQUE_DPORT_THRESHOLD;
+
+    let mlResponse: {
+      prediction: string;
+      confidence: number;
+      model_label?: string;
+    };
+    let attackType: AttackType = "none";
+
     if (isDeterministicDos) {
-      // create traffic_logs row with Suspicious and also insert into alerts (existing code path)
-      // You can shortcut by setting mlResponse/predictedLabel accordingly:
-      mlResponse = { prediction: "Suspicious", confidence: 1.0, model_label: "rule:detection" };
-      // then proceed to insertTraffic (the code below will insert) and alert handling
+      mlResponse = {
+        prediction: "Suspicious",
+        confidence: 1.0,
+        model_label: "rule:dos",
+      };
+      attackType = "dos";
+    } else if (isPortScan) {
+      mlResponse = {
+        prediction: "Suspicious",
+        confidence: 1.0,
+        model_label: "rule:portscan",
+      };
+      attackType = "port_scan";
     } else {
       mlResponse = await getPrediction(features);
     }
 
-
     const attackProb = Number(mlResponse.confidence ?? 0);
 
-    // Map raw model labels without fragile substring checks (e.g. "abnormal" ≠ "normal")
-    function modelLabelToText(lbl: unknown): "Suspicious" | "Normal" | null {
-      if (lbl === null || typeof lbl === "undefined") return null;
-      const s = String(lbl).toLowerCase().trim();
-
-      const suspiciousExact = new Set([
-        "1", "true", "suspicious", "anomaly", "attack", "malicious", "intrusion",
-      ]);
-      const normalExact = new Set(["0", "false", "normal", "benign"]);
-
-      if (suspiciousExact.has(s) || s.startsWith("rule:")) return "Suspicious";
-      if (normalExact.has(s)) return "Normal";
-      if (/^(attack|anomaly|malicious|intrusion|suspicious)/.test(s)) return "Suspicious";
-      if (/^(normal|benign)$/.test(s)) return "Normal";
-
-      return null;
-    }
-
-    // Trust ML service prediction first; only re-threshold when it is missing or unknown
-    const mlPrediction = mlResponse.prediction;
     let predictedLabel: "Suspicious" | "Normal";
-    if (mlPrediction === "Suspicious" || mlPrediction === "Normal") {
-      predictedLabel = mlPrediction;
+    if (isDeterministicDos || isPortScan) {
+      predictedLabel = "Suspicious";
+    } else if (mlResponse.prediction === "Suspicious" || mlResponse.prediction === "Normal") {
+      predictedLabel = mlResponse.prediction;
+      attackType = predictedLabel === "Suspicious" ? "ml_anomaly" : "none";
     } else {
-      const fromModelLabel = modelLabelToText(mlResponse.model_label);
-      predictedLabel = fromModelLabel ?? (attackProb >= ML_THRESHOLD ? "Suspicious" : "Normal");
+      predictedLabel = attackProb >= ML_THRESHOLD ? "Suspicious" : "Normal";
+      attackType = predictedLabel === "Suspicious" ? "ml_anomaly" : "none";
     }
 
-    // logging for debugging
-    console.info("ML_RESPONSE:", { predictedLabel, attackProb, mlResponse });
+    console.info("ANALYZE:", {
+      predictedLabel,
+      attackType,
+      attackProb,
+      maybeCount,
+      maybeUniqueDports,
+      rule: isDeterministicDos ? "dos" : isPortScan ? "port_scan" : "ml",
+    });
 
-    // 3) numeric gating to avoid tiny events
     const nCount = Number(count ?? 0);
     const nDstHostCount = Number(dst_host_count ?? 0);
     const nSerror = Number(serror_rate ?? 0);
-    const passesNumericGate = (nCount >= MIN_COUNT) || (nDstHostCount >= MIN_DST_HOST_COUNT) || (nSerror >= MIN_SERROR_RATE);
+    const passesNumericGate =
+      nCount >= MIN_COUNT ||
+      nDstHostCount >= MIN_DST_HOST_COUNT ||
+      nSerror >= MIN_SERROR_RATE ||
+      maybeUniqueDports >= SCAN_UNIQUE_DPORT_THRESHOLD;
 
-    // 4) update consecutive state
     const key = destination_ip || `${source_ip}->${destination_ip}` || "unknown";
     const entry = state.get(key) ?? { consecutive: 0, lastSeenAt: nowSec() };
 
@@ -149,9 +173,8 @@ router.post("/", async (req, res) => {
     entry.lastSeenAt = nowSec();
 
     const lastAlertAt = entry.lastAlertAt ?? 0;
-    const inCooldown = (nowSec() - lastAlertAt) < ALERT_COOLDOWN;
+    const inCooldown = nowSec() - lastAlertAt < ALERT_COOLDOWN;
 
-    // 5) ALWAYS store into traffic_logs
     const insertTrafficQuery = `
       INSERT INTO traffic_logs (
         source_ip,
@@ -159,6 +182,7 @@ router.post("/", async (req, res) => {
         protocol,
         service,
         prediction,
+        attack_type,
         confidence,
         duration,
         protocol_type,
@@ -167,7 +191,7 @@ router.post("/", async (req, res) => {
         dst_bytes,
         created_at
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11, CURRENT_TIMESTAMP)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, CURRENT_TIMESTAMP)
       RETURNING *
     `;
     const trafficValues = [
@@ -176,6 +200,7 @@ router.post("/", async (req, res) => {
       protocol ?? "tcp",
       service ?? "http",
       predictedLabel,
+      attackType,
       attackProb,
       duration ?? null,
       features.protocol_type ?? protocol ?? "tcp",
@@ -187,12 +212,10 @@ router.post("/", async (req, res) => {
     const trafficResult = await db.query(insertTrafficQuery, trafficValues);
     const insertedTraffic = trafficResult.rows[0];
 
-    // 6) If alert conditions met, insert into alerts table (create alerts table separately)
     let insertedAlert = null;
     let alerted = false;
 
     if (entry.consecutive >= ALERT_CONSECUTIVE && !inCooldown) {
-      // Create alerts table if you prefer to log alerts separately. Insert features JSON for context.
       const insertAlertQuery = `
         INSERT INTO alerts (
           source_ip,
@@ -200,11 +223,12 @@ router.post("/", async (req, res) => {
           protocol,
           service,
           prediction,
+          attack_type,
           confidence,
           features,
           created_at
         )
-        VALUES ($1,$2,$3,$4,$5,$6,$7, CURRENT_TIMESTAMP)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8, CURRENT_TIMESTAMP)
         RETURNING *
       `;
       const alertValues = [
@@ -213,17 +237,16 @@ router.post("/", async (req, res) => {
         protocol ?? "tcp",
         service ?? "http",
         "Suspicious",
+        attackType,
         attackProb,
-        JSON.stringify(features),
+        JSON.stringify({ ...features, unique_dport_count: maybeUniqueDports }),
       ];
       try {
         const alertResult = await db.query(insertAlertQuery, alertValues);
         insertedAlert = alertResult.rows[0];
       } catch (err) {
-        // If alerts table doesn't exist, log and continue (so traffic still recorded)
         // @ts-ignore
-        console.warn("Failed to insert alert (alerts table missing?), create alerts table if desired. Error:", err.message || err);
-        insertedAlert = null;
+        console.warn("Failed to insert alert:", err.message || err);
       }
 
       entry.lastAlertAt = nowSec();
@@ -231,12 +254,12 @@ router.post("/", async (req, res) => {
       alerted = true;
     }
 
-    // persist state
     state.set(key, entry);
 
-    // 7) response
     res.json({
       message: "analyzed",
+      attack_type: attackType,
+      attack_type_label: formatAttackType(attackType),
       ml: mlResponse,
       features,
       numericGate: passesNumericGate,

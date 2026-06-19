@@ -2,7 +2,8 @@
 
 Step-by-step guide: **install → train model → configure → run services → test** ML classification, rule-based DoS detection, alerts, whitelist, live capture, and SYN flood simulation.
 
-For feature descriptions, see [features-v1.md](./features-v1.md).
+For feature descriptions, see [features-v1.md](./features-v1.md).  
+For attack demos (DoS, port scan, hping3, nmap, alerts), see [attack-readme.md](./attack-readme.md).
 
 ---
 
