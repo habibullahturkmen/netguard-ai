@@ -68,7 +68,7 @@ Design and implement an ML-based network monitoring system that detects suspicio
 |---|-----------|--------|
 | 1 | Capture and analyze network traffic | ✅ Live sniffer + manual API |
 | 2 | Extract essential traffic features | ✅ 41 NSL-KDD-style features per window |
-| 3 | Train ML model on public IDS datasets | ✅ Random Forest on NSL-KDD |
+| 3 | Train ML model on public IDS datasets | ✅ Random Forest on NSL-KDD; evaluated on official KDDTest+ |
 | 4 | Classify traffic as normal or suspicious | ✅ Binary classification + attack types |
 | 5 | Store detection logs in PostgreSQL | ✅ `traffic_logs` + `alerts` tables |
 | 6 | Visualize results in a web interface | ✅ Multi-page React dashboard |
@@ -106,7 +106,7 @@ Design and implement an ML-based network monitoring system that detects suspicio
 
 | Phase | Proposal | What we did |
 |-------|----------|-------------|
-| **1. Dataset** | Study NSL-KDD, CICIDS2017 | Trained on **NSL-KDD** (`train_real_dataset.py`) |
+| **1. Dataset** | Study NSL-KDD, CICIDS2017 | Trained on **`NSL-KDD-Train.csv`**; evaluated on official **`NSL-KDD-Test.txt`** (KDDTest+) via `train_real_dataset.py` |
 | **2. Preprocessing** | Clean, encode, normalize | Label encoding for protocol/service/flag; 41-feature schema |
 | **3. Model** | Random Forest classifier | 100 trees; binary Normal vs Suspicious |
 | **4. Backend** | Node.js API + PostgreSQL | Express/TypeScript; `/api/analyze`, `/api/logs`, `/api/alerts` |
@@ -224,8 +224,6 @@ Multi-page React UI with sticky navigation:
 
 ### ML model — official NSL-KDD test (KDDTest+)
 
-*Primary benchmark — report these numbers*
-
 | Metric | Result |
 |--------|--------|
 | Accuracy | **77.2%** |
@@ -234,23 +232,7 @@ Multi-page React UI with sticky navigation:
 | F1-Score (Suspicious) | **75.7%** |
 | Test samples | 22,544 |
 
-**Confusion matrix**
-
-|  | Pred. Normal | Pred. Suspicious |
-|--|--------------|------------------|
-| **Actual Normal** | 9,431 | 280 |
-| **Actual Suspicious** | 4,855 | 7,978 |
-
-*High precision → few false alarms. Lower recall → some attacks missed on official benchmark.*
-
-### ML model — internal holdout (secondary)
-
-| Metric | Result |
-|--------|--------|
-| Accuracy | 99.9% |
-| F1-Score | 99.9% |
-
-*20% split from training file — optimistic; supplementary only.*
+*High precision → few false alarms. Lower recall → some attacks missed on the official benchmark.*
 
 ### System evaluation
 

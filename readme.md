@@ -11,7 +11,7 @@ Network intrusion detection demo: live packet capture → Express backend → Fa
 | **[docs/attack-readme.md](docs/attack-readme.md)** | **Attack demos: DoS, port scan, hping3, nmap, alert chain** |
 | [docs/testing-the-project.md](docs/testing-the-project.md) | Full install (Windows + Linux), train model, smoke tests |
 | [docs/slide-11-evaluation-analysis.md](docs/slide-11-evaluation-analysis.md) | Slide 11 — ML metrics analysis (official NSL-KDD test) |
-| [ml-service/docs/model_results.md](ml-service/docs/model_results.md) | Auto-generated training metrics |
+| [ml-service/docs/model_results.md](ml-service/docs/model_results.md) | Auto-generated metrics (official NSL-KDD test + internal holdout) |
 
 ## Quick start (Linux)
 
@@ -26,7 +26,7 @@ psql -U netguard_user -d netguard_ai -f backend/src/db/schema.sql
 # 2. ML model
 cd ml-service && python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-cd model && python train_real_dataset.py   # needs NSL-KDD-Train.csv
+cd model && python train_real_dataset.py   # needs NSL-KDD-Train.csv; downloads NSL-KDD-Test.txt on first run
 
 # 3. Apps
 cd ../../backend && pnpm install
@@ -66,7 +66,7 @@ Restart backend after changing `.env`.
 
 ### Report statement
 
-The Random Forest classifier was trained using a processed subset of the NSL-KDD intrusion detection dataset. The model was configured as a binary classifier, categorizing network traffic into Normal and Suspicious classes. Performance was evaluated using accuracy, precision, recall, and F1-score metrics.
+The Random Forest classifier was trained on **`NSL-KDD-Train.csv`** and evaluated on the official NSL-KDD test set (**KDDTest+**, `NSL-KDD-Test.txt`). The model is a binary classifier (Normal vs Suspicious). On the official benchmark (22,544 held-out flows), it achieves **77.2% accuracy**, **96.6% precision**, **62.2% recall**, and **75.7% F1-score**. An internal 20% holdout from the training file scores ~99.9% but is supplementary only — report the official test metrics in presentations. Full results: [ml-service/docs/model_results.md](ml-service/docs/model_results.md).
 
 ---
 

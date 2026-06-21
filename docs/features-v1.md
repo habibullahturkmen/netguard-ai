@@ -27,7 +27,8 @@ flowchart LR
 
 ### 1. ML-based traffic classification
 
-- **Random Forest** trained on **NSL-KDD** (41 features)
+- **Random Forest** trained on **`NSL-KDD-Train.csv`** (41 features)
+- Evaluated on the official **KDDTest+** benchmark (`NSL-KDD-Test.txt`) — **77.2% accuracy**, **75.7% F1** (see [model_results.md](../ml-service/docs/model_results.md))
 - Output: **Normal** or **Suspicious** + **attack probability** (0–1)
 - Handles protocol/service/flag encoding and probability threshold (`ML_THRESHOLD=0.4`)
 
@@ -138,4 +139,4 @@ See [readme.md](../readme.md#whitelist-local-testing-vs-production) for dev vs p
 
 ## Report statement (optional)
 
-The Random Forest classifier was trained using a processed subset of the NSL-KDD intrusion detection dataset. The model was configured as a binary classifier, categorizing network traffic into Normal and Suspicious classes. Performance was evaluated using accuracy, precision, recall, and F1-score metrics.
+The Random Forest classifier was trained on **`NSL-KDD-Train.csv`** and evaluated on the official NSL-KDD test set (**KDDTest+**, `NSL-KDD-Test.txt`). The model is a binary classifier (Normal vs Suspicious). On the official benchmark (22,544 held-out flows), it achieves **77.2% accuracy**, **96.6% precision**, **62.2% recall**, and **75.7% F1-score**. An internal 20% holdout from the training file scores ~99.9% but is supplementary only. Full results: [ml-service/docs/model_results.md](../ml-service/docs/model_results.md).

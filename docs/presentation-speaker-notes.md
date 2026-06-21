@@ -186,7 +186,7 @@ This document explains **what each slide is for**, **what to say**, and **how to
 
 > Our methodology follows six phases.
 >
-> **Phase 1 — Dataset:** We studied NSL-KDD and CICIDS2017 as proposed; we **trained on NSL-KDD** using `train_real_dataset.py`.
+> **Phase 1 — Dataset:** We studied NSL-KDD and CICIDS2017 as proposed. We **trained on `NSL-KDD-Train.csv`** and **evaluated on the official test set** (`NSL-KDD-Test.txt`, KDDTest+) using `train_real_dataset.py` — the test file auto-downloads on first run if missing.
 >
 > **Phase 2 — Preprocessing:** We cleaned data, applied **label encoding** for protocol, service, and flag, and aligned a **41-feature schema** with our runtime API.
 >
@@ -542,7 +542,7 @@ Adjust for team size. Everyone should be able to answer one question on **archit
 
 | Question | Short answer |
 |----------|--------------|
-| What dataset? | NSL-KDD, binary Normal vs Suspicious |
+| What dataset? | **Train:** `NSL-KDD-Train.csv`. **Test:** official KDDTest+ (`NSL-KDD-Test.txt`). Binary Normal vs Suspicious. Report **77.2% accuracy** on official test. |
 | What algorithm? | Random Forest, 100 trees |
 | How is DoS detected? | count ≥ 200, serror_rate ≥ 0.8, dst_host_count ≥ 50 |
 | How is port scan detected? | count ≥ 50, unique_dport_count ≥ 20 |

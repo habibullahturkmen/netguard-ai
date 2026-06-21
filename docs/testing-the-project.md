@@ -19,8 +19,12 @@ These files are **gitignored** or must be created locally after clone:
 | `frontend/.env` | `frontend/` | Create from template in this doc (not committed) |
 | Python `venv/` | `ml-service/` | Create with `python -m venv venv` |
 | `node_modules/` | `backend/`, `frontend/` | `pnpm install` |
+| `NSL-KDD-Train.csv` | `ml-service/model/` | Download NSL-KDD training CSV before training (required) |
+| `NSL-KDD-Test.txt` | `ml-service/model/` | Auto-downloaded on first `train_real_dataset.py` run (official KDDTest+ benchmark) |
 
 **`NSL-KDD-Train.csv`** may or may not be in your clone (large dataset). If missing, download an NSL-KDD training CSV and save it as `ml-service/model/NSL-KDD-Train.csv` before training.
+
+**`NSL-KDD-Test.txt`** is the official held-out test set (KDDTest+). You do not need to download it manually — `train_real_dataset.py` fetches it on first run if absent. Keep both files; they serve different roles (train vs benchmark).
 
 The ML service **will not start** without `model.pkl` and `encoders.pkl`.
 
@@ -637,6 +641,7 @@ curl http://127.0.0.1:5000/api/logs | jq '.[0:3]'
 |---------|-----|
 | `FileNotFoundError: model.pkl` | Run `train_real_dataset.py` in `ml-service/model/` |
 | `NSL-KDD-Train.csv` not found | Download NSL-KDD; save as `ml-service/model/NSL-KDD-Train.csv` |
+| `NSL-KDD-Test.txt` missing | Re-run `train_real_dataset.py` — it auto-downloads KDDTest+; or delete a corrupt file and re-run |
 | ML service crashes on start | Check both `model.pkl` and `encoders.pkl` exist |
 | Backend `ECONNREFUSED` to ML | Start ML service on port 8000; check `ML_SERVICE_URL` |
 | Backend DB error | PostgreSQL running? Password in `backend/.env` correct? Schema applied? |
