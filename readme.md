@@ -10,7 +10,8 @@ Network intrusion detection demo: live packet capture → Express backend → Fa
 | [docs/presentation-slides.pdf](docs/presentation-slides.pdf) | Slides for Presentation |
 | **[docs/attack-readme.md](docs/attack-readme.md)** | **Attack demos: DoS, port scan, hping3, nmap, alert chain** |
 | [docs/testing-the-project.md](docs/testing-the-project.md) | Full install (Windows + Linux), train model, smoke tests |
-| [docs/features-v1.md](docs/features-v1.md) | Detection capabilities and limits |
+| [docs/slide-11-evaluation-analysis.md](docs/slide-11-evaluation-analysis.md) | Slide 11 — ML metrics analysis (official NSL-KDD test) |
+| [ml-service/docs/model_results.md](ml-service/docs/model_results.md) | Auto-generated training metrics |
 
 ## Quick start (Linux)
 

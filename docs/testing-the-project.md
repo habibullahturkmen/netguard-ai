@@ -115,6 +115,11 @@ ls NSL-KDD-Train.csv   # must exist
 python train_real_dataset.py
 ```
 
+On first run, the script downloads the **official NSL-KDD test set** to `NSL-KDD-Test.txt` if missing, then writes metrics to `ml-service/docs/model_results.md`:
+
+- **Primary (report this):** official KDDTest+ benchmark (~77% accuracy on our training file)
+- **Secondary:** internal 20% holdout (~99% — optimistic, same file as training)
+
 Verify artifacts were created:
 
 ```bash
@@ -234,6 +239,8 @@ dir NSL-KDD-Train.csv
 
 python train_real_dataset.py
 ```
+
+Downloads `NSL-KDD-Test.txt` on first run if needed. See `ml-service/docs/model_results.md` for official vs holdout metrics.
 
 Verify:
 

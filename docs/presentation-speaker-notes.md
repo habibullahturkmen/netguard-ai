@@ -358,18 +358,22 @@ This document explains **what each slide is for**, **what to say**, and **how to
 
 **Purpose:** Quantify ML performance and system behavior.
 
+**Prep:** Read [slide-11-evaluation-analysis.md](slide-11-evaluation-analysis.md) for full analysis, confusion matrix, and Q&A.
+
 **Say this:**
 
-> On **NSL-KDD**, our Random Forest achieved roughly **96.2% accuracy**, **95.8% precision**, **96.5% recall**, and **96.1% F1-score**. We also used a **confusion matrix** as proposed.
+> On **NSL-KDD**, we report two evaluations. The **official test set (KDDTest+)** is the benchmark to cite: **77.2% accuracy**, **96.6% precision**, **62.2% recall**, and **75.7% F1-score** on **22,544 test flows**.
 >
-> These metrics show the model **generalizes well** on held-out test data for binary Normal vs Suspicious classification.
+> Our confusion matrix shows **9,431** normal flows correct, only **280** false alarms, but **4,855** missed attacks — so **precision is strong** and **recall is the main trade-off**.
 >
-> For **system evaluation**: API scoring is **near real-time** — typically under a few seconds per flow. **Usability** is supported by separate dashboard pages. **Lab testing** is documented with reproducible steps using curl, hping3, and nmap in `docs/attack-readme.md`.
+> An internal 20% holdout scores ~**99.9%**, but that is optimistic — same training file, simpler labels — mention it only as supplementary.
+>
+> For **system evaluation**: API scoring is near real-time, the dashboard has separate pages, and lab testing uses curl, hping3, and nmap.
 
 **Emphasize:**
 
 - **Precision vs recall** — precision = fewer false alarms; recall = catch more attacks
-- Metrics are on **dataset evaluation**, not necessarily your live Wi‑Fi traffic
+- Metrics on **official NSL-KDD test set** — not the easy internal holdout
 
 **Transition:**
 
@@ -377,7 +381,8 @@ This document explains **what each slide is for**, **what to say**, and **how to
 
 **If asked…**
 
-- *“Is 96% on live traffic?”* — No; it is on **NSL-KDD test split**. Live traffic validation is qualitative via **demo scenarios**.
+- *“Is 99% real?”* — Only on the **internal holdout** from the same training file. The **official NSL-KDD test** is ~**77%** accuracy — report that number instead.
+- *“Is 77% on live traffic?”* — No; it is on the **official NSL-KDD test split**. Live traffic validation is qualitative via **demo scenarios**.
 - *“False positives?”* — Possible on ML path; rules are deterministic. Whitelist can reduce noise to trusted IPs.
 
 **Timing:** ~1 minute
@@ -433,7 +438,7 @@ This document explains **what each slide is for**, **what to say**, and **how to
 > We mapped each **expected outcome** from the proposal to what we delivered.
 >
 > Classify traffic as normal or suspicious — **done** with ML and rules.  
-> Demonstrate ML effectiveness — **~96% accuracy** on NSL-KDD.  
+> Demonstrate ML effectiveness — **77.2% accuracy on official NSL-KDD test** (75.7% F1).  
 > Simple dashboard — **multi-page React UI** with Humber styling.  
 > Efficient PostgreSQL storage — **traffic_logs**, **alerts**, pagination.  
 > Practical for education — **documented setup**, attack readme, and testing guide.  

@@ -218,22 +218,47 @@ Multi-page React UI with sticky navigation:
 
 ## Slide 11 — Evaluation Metrics
 
-### ML model (NSL-KDD training)
+![Evaluation metrics — Humber brand](presentation-images/slide-11-evaluation-humber.png)
+
+**Analysis report:** [slide-11-evaluation-analysis.md](slide-11-evaluation-analysis.md)
+
+### ML model — official NSL-KDD test (KDDTest+)
+
+*Primary benchmark — report these numbers*
 
 | Metric | Result |
 |--------|--------|
-| Accuracy | 96.2% |
-| Precision | 95.8% |
-| Recall | 96.5% |
-| F1-Score | 96.1% |
+| Accuracy | **77.2%** |
+| Precision (Suspicious) | **96.6%** |
+| Recall (Suspicious) | **62.2%** |
+| F1-Score (Suspicious) | **75.7%** |
+| Test samples | 22,544 |
 
-*Evaluated with accuracy, precision, recall, F1-score, and confusion matrix as proposed.*
+**Confusion matrix**
+
+|  | Pred. Normal | Pred. Suspicious |
+|--|--------------|------------------|
+| **Actual Normal** | 9,431 | 280 |
+| **Actual Suspicious** | 4,855 | 7,978 |
+
+*High precision → few false alarms. Lower recall → some attacks missed on official benchmark.*
+
+### ML model — internal holdout (secondary)
+
+| Metric | Result |
+|--------|--------|
+| Accuracy | 99.9% |
+| F1-Score | 99.9% |
+
+*20% split from training file — optimistic; supplementary only.*
 
 ### System evaluation
 
 - **Response time:** Real-time scoring via REST API (< few seconds per flow)
 - **Usability:** Separate pages for stats, analytics, alerts, and logs
 - **Lab testing:** Reproducible demos with curl, hping3, and nmap (see `docs/attack-readme.md`)
+
+*Raw metrics auto-generated: `ml-service/docs/model_results.md`*
 
 ---
 
@@ -257,7 +282,7 @@ Multi-page React UI with sticky navigation:
 | Outcome (proposal) | Achieved |
 |--------------------|----------|
 | Classify traffic as normal or suspicious | ✅ ML + rules |
-| Demonstrate ML effectiveness for IDS | ✅ ~96% accuracy on NSL-KDD |
+| Demonstrate ML effectiveness for IDS | ✅ 77.2% accuracy on official NSL-KDD test |
 | Simple, user-friendly dashboard | ✅ Multi-page React UI |
 | Efficient PostgreSQL log storage | ✅ traffic_logs + alerts + pagination |
 | Practical for educational use | ✅ Documented setup and attack demos |
