@@ -68,7 +68,7 @@ Design and implement an ML-based network monitoring system that detects suspicio
 |---|-----------|--------|
 | 1 | Capture and analyze network traffic | ✅ Live sniffer + manual API |
 | 2 | Extract essential traffic features | ✅ 41 NSL-KDD-style features per window |
-| 3 | Train ML model on public IDS datasets | ✅ Random Forest on NSL-KDD |
+| 3 | Train ML model on public IDS datasets | ✅ Random Forest on NSL-KDD; evaluated on official KDDTest+ |
 | 4 | Classify traffic as normal or suspicious | ✅ Binary classification + attack types |
 | 5 | Store detection logs in PostgreSQL | ✅ `traffic_logs` + `alerts` tables |
 | 6 | Visualize results in a web interface | ✅ Multi-page React dashboard |
@@ -106,7 +106,7 @@ Design and implement an ML-based network monitoring system that detects suspicio
 
 | Phase | Proposal | What we did |
 |-------|----------|-------------|
-| **1. Dataset** | Study NSL-KDD, CICIDS2017 | Trained on **NSL-KDD** (`train_real_dataset.py`) |
+| **1. Dataset** | Study NSL-KDD, CICIDS2017 | Trained on **`NSL-KDD-Train.csv`**; evaluated on official **`NSL-KDD-Test.txt`** (KDDTest+) via `train_real_dataset.py` |
 | **2. Preprocessing** | Clean, encode, normalize | Label encoding for protocol/service/flag; 41-feature schema |
 | **3. Model** | Random Forest classifier | 100 trees; binary Normal vs Suspicious |
 | **4. Backend** | Node.js API + PostgreSQL | Express/TypeScript; `/api/analyze`, `/api/logs`, `/api/alerts` |
@@ -218,22 +218,29 @@ Multi-page React UI with sticky navigation:
 
 ## Slide 11 — Evaluation Metrics
 
-### ML model (NSL-KDD training)
+![Evaluation metrics — Humber brand](presentation-images/slide-11-evaluation-humber.png)
+
+**Analysis report:** [slide-11-evaluation-analysis.md](slide-11-evaluation-analysis.md)
+
+### ML model — official NSL-KDD test (KDDTest+)
 
 | Metric | Result |
 |--------|--------|
-| Accuracy | 96.2% |
-| Precision | 95.8% |
-| Recall | 96.5% |
-| F1-Score | 96.1% |
+| Accuracy | **77.2%** |
+| Precision (Suspicious) | **96.6%** |
+| Recall (Suspicious) | **62.2%** |
+| F1-Score (Suspicious) | **75.7%** |
+| Test samples | 22,544 |
 
-*Evaluated with accuracy, precision, recall, F1-score, and confusion matrix as proposed.*
+*High precision → few false alarms. Lower recall → some attacks missed on the official benchmark.*
 
 ### System evaluation
 
 - **Response time:** Real-time scoring via REST API (< few seconds per flow)
 - **Usability:** Separate pages for stats, analytics, alerts, and logs
 - **Lab testing:** Reproducible demos with curl, hping3, and nmap (see `docs/attack-readme.md`)
+
+*Raw metrics auto-generated: `ml-service/docs/model_results.md`*
 
 ---
 
@@ -257,7 +264,7 @@ Multi-page React UI with sticky navigation:
 | Outcome (proposal) | Achieved |
 |--------------------|----------|
 | Classify traffic as normal or suspicious | ✅ ML + rules |
-| Demonstrate ML effectiveness for IDS | ✅ ~96% accuracy on NSL-KDD |
+| Demonstrate ML effectiveness for IDS | ✅ 77.2% accuracy on official NSL-KDD test |
 | Simple, user-friendly dashboard | ✅ Multi-page React UI |
 | Efficient PostgreSQL log storage | ✅ traffic_logs + alerts + pagination |
 | Practical for educational use | ✅ Documented setup and attack demos |
