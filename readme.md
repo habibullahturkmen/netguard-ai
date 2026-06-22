@@ -6,12 +6,12 @@ Network intrusion detection demo: live packet capture → Express backend → Fa
 
 | Doc | Contents |
 |-----|----------|
-| **[docs/NetGuard-AI-Written-Report.docx](docs/NetGuard-AI-Written-Report.docx)** | **Written report (APA 7) — submit alongside slides** |
+| **[docs/NetGuard-AI-Written-Report.docx](docs/NetGuard-AI-Written-Report.docx)** | **Written report (APA 7)** |
 | [docs/presentation-slides.pdf](docs/presentation-slides.pdf) | Slides for Presentation |
 | **[docs/attack-readme.md](docs/attack-readme.md)** | **Attack demos: DoS, port scan, hping3, nmap, alert chain** |
 | [docs/testing-the-project.md](docs/testing-the-project.md) | Full install (Windows + Linux), train model, smoke tests |
 | [docs/slide-11-evaluation-analysis.md](docs/slide-11-evaluation-analysis.md) | Slide 11 — ML metrics analysis (official NSL-KDD test) |
-| [ml-service/docs/model_results.md](ml-service/docs/model_results.md) | Auto-generated metrics (official NSL-KDD test + internal holdout) |
+| [ml-service/docs/model_results.md](ml-service/docs/model_results.md) | Auto-generated metrics (official NSL-KDD test) |
 
 ## Quick start (Linux)
 
@@ -66,7 +66,7 @@ Restart backend after changing `.env`.
 
 ### Report statement
 
-The Random Forest classifier was trained on **`NSL-KDD-Train.csv`** and evaluated on the official NSL-KDD test set (**KDDTest+**, `NSL-KDD-Test.txt`). The model is a binary classifier (Normal vs Suspicious). On the official benchmark (22,544 held-out flows), it achieves **77.2% accuracy**, **96.6% precision**, **62.2% recall**, and **75.7% F1-score**. An internal 20% holdout from the training file scores ~99.9% but is supplementary only — report the official test metrics in presentations. Full results: [ml-service/docs/model_results.md](ml-service/docs/model_results.md).
+The Random Forest classifier was trained on **`NSL-KDD-Train.csv`** and evaluated on the official NSL-KDD test set (**KDDTest+**, `NSL-KDD-Test.txt`). The model is a binary classifier (Normal vs Suspicious). On the official benchmark (22,544 held-out flows), it achieves **77.2% accuracy**, **96.6% precision**, **62.2% recall**, and **75.7% F1-score**. Full results: [ml-service/docs/model_results.md](ml-service/docs/model_results.md).
 
 ---
 

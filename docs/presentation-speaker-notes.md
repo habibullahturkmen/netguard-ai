@@ -362,18 +362,16 @@ This document explains **what each slide is for**, **what to say**, and **how to
 
 **Say this:**
 
-> On **NSL-KDD**, we report two evaluations. The **official test set (KDDTest+)** is the benchmark to cite: **77.2% accuracy**, **96.6% precision**, **62.2% recall**, and **75.7% F1-score** on **22,544 test flows**.
+> On **NSL-KDD**, we evaluated on the **official test set (KDDTest+)**: **77.2% accuracy**, **96.6% precision**, **62.2% recall**, and **75.7% F1-score** on **22,544 test flows**.
 >
 > Our confusion matrix shows **9,431** normal flows correct, only **280** false alarms, but **4,855** missed attacks — so **precision is strong** and **recall is the main trade-off**.
->
-> An internal 20% holdout scores ~**99.9%**, but that is optimistic — same training file, simpler labels — mention it only as supplementary.
 >
 > For **system evaluation**: API scoring is near real-time, the dashboard has separate pages, and lab testing uses curl, hping3, and nmap.
 
 **Emphasize:**
 
 - **Precision vs recall** — precision = fewer false alarms; recall = catch more attacks
-- Metrics on **official NSL-KDD test set** — not the easy internal holdout
+- Metrics on **official NSL-KDD test set (KDDTest+)**
 
 **Transition:**
 
@@ -381,7 +379,7 @@ This document explains **what each slide is for**, **what to say**, and **how to
 
 **If asked…**
 
-- *“Is 99% real?”* — Only on the **internal holdout** from the same training file. The **official NSL-KDD test** is ~**77%** accuracy — report that number instead.
+- *“Is 77% good?”* — For a student capstone with a single Random Forest on KDDTest+, it is reasonable, especially with **96.6% precision**.
 - *“Is 77% on live traffic?”* — No; it is on the **official NSL-KDD test split**. Live traffic validation is qualitative via **demo scenarios**.
 - *“False positives?”* — Possible on ML path; rules are deterministic. Whitelist can reduce noise to trusted IPs.
 

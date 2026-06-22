@@ -2,7 +2,7 @@
   "feature_count": 41,
   "training_file": "NSL-KDD-Train.csv",
   "official_test_file": "NSL-KDD-Test.txt",
-  "primary_evaluation": {
+  "evaluation": {
     "split": "official_nsl_kdd_test",
     "accuracy": 0.7722232079489,
     "precision": 0.9660934851053524,
@@ -25,29 +25,5 @@
       ]
     },
     "test_samples": 22544
-  },
-  "internal_holdout": {
-    "split": "internal_holdout_20pct",
-    "accuracy": 0.9993715476466113,
-    "precision": 0.999644532916252,
-    "recall": 0.9990053285968028,
-    "f1_score": 0.999324828541985,
-    "confusion_matrix": {
-      "labels": [
-        "Normal",
-        "Suspicious"
-      ],
-      "matrix": [
-        [
-          16153,
-          5
-        ],
-        [
-          14,
-          14061
-        ]
-      ]
-    },
-    "test_samples": 30233
   }
 }

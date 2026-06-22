@@ -1,22 +1,21 @@
 # Slide 11 — Evaluation Metrics Analysis
 
-**Project:** NetGuard AI · **Team:** Cyber Experts · **Institution:** Humber Polytechnic  
-**Purpose:** Detailed analysis backing **Slide 11 — Evaluation Metrics** in the presentation  
-**Source data:** `ml-service/docs/model_results.md`, `ml-service/model/evaluation_results.json`  
+**Project:** NetGuard AI · **Team:** Cyber Experts · **Institution:** Humber Polytechnic
+**Purpose:** Detailed analysis backing **Slide 11 — Evaluation Metrics** in the presentation
+**Source data:** `ml-service/docs/model_results.md`, `ml-service/model/evaluation_results.json`
 **Generated from:** `train_real_dataset.py` (Random Forest, 100 estimators, 41 NSL-KDD features)
 
 ---
 
 ## Executive summary
 
-NetGuard AI’s machine learning component was evaluated using **two complementary methods**:
+NetGuard AI’s machine learning component was evaluated on the **official NSL-KDD test set (KDDTest+)**:
 
 | Evaluation | Dataset | Accuracy | F1 (Suspicious) | Use in presentation |
 |------------|---------|----------|-----------------|---------------------|
-| **Primary (report this)** | Official NSL-KDD test (KDDTest+) | **77.2%** | **75.7%** | ✅ Main Slide 11 numbers |
-| Secondary (supplementary) | Internal 20% holdout | 99.9% | 99.9% | Mention only if asked |
+| **Official test (report this)** | KDDTest+ | **77.2%** | **75.7%** | ✅ Main Slide 11 numbers |
 
-The **official test set** is the academically defensible benchmark. The **internal holdout** is optimistic because train and test rows come from the same file with the same simplified `normal` / `anomaly` labels.
+KDDTest+ is the standard held-out benchmark from Tavallaee et al. (2009). The model trains on `NSL-KDD-Train.csv` and is never fit on test rows.
 
 System-level evaluation (API latency, dashboard usability, lab demos) is separate from these ML metrics and is also covered on Slide 11.
 
@@ -105,7 +104,7 @@ F1-Score  = balance of precision and recall ≈ 75.7%
 
 ---
 
-## 3. Primary evaluation — official NSL-KDD test set
+## 3. ML evaluation — official NSL-KDD test set
 
 **Why this matters:** KDDTest+ is the standard held-out benchmark from Tavallaee et al. (2009). The model never trains on these rows, so scores reflect generalization to unseen attack patterns.
 
@@ -170,34 +169,7 @@ weighted avg       0.83      0.77      0.77     22544
 
 ---
 
-## 4. Secondary evaluation — internal 20% holdout
-
-| Metric | Value |
-|--------|-------|
-| Accuracy | 99.9% |
-| Precision (Suspicious) | 100.0% |
-| Recall (Suspicious) | 99.9% |
-| F1-Score (Suspicious) | 99.9% |
-| Test samples | 30,233 |
-
-### Confusion matrix
-
-|  | Predicted Normal | Predicted Suspicious |
-|--|------------------|----------------------|
-| **Actual Normal** | 16,153 | 5 |
-| **Actual Suspicious** | 14 | 14,061 |
-
-### Why this score is ~99%
-
-1. **Same source file** — holdout rows are from `NSL-KDD-Train.csv`, not the official benchmark.
-2. **Simplified labels** — only `normal` and `anomaly`, easier to separate than multi-attack KDDTest+.
-3. **Similar feature distribution** — train and test splits share the same preprocessing pipeline.
-
-**Do not use 99.9% as the main result in the presentation.** Use it only to show the model fits the training distribution well, while the official test shows real-world benchmark difficulty.
-
----
-
-## 5. System evaluation (non-ML)
+## 4. System evaluation (non-ML)
 
 These items appear on Slide 11 alongside ML metrics:
 
@@ -211,7 +183,7 @@ Live demos validate **rules, pipeline, and UI** — not the offline F1 score.
 
 ---
 
-## 6. What to say on Slide 11 (30–45 seconds)
+## 5. What to say on Slide 11 (30–45 seconds)
 
 > We evaluated our Random Forest using the **official NSL-KDD test set**, the standard benchmark from Tavallaee et al. (2009). On **22,544 held-out flows**, we achieved **77.2% accuracy**, **96.6% precision**, **62.2% recall**, and **75.7% F1-score** for detecting suspicious traffic.
 >
@@ -221,11 +193,10 @@ Live demos validate **rules, pipeline, and UI** — not the offline F1 score.
 
 ---
 
-## 7. Likely Q&A
+## 6. Likely Q&A
 
 | Question | Answer |
 |----------|--------|
-| Why not 99%? | 99.9% is the **internal holdout** on the same training file. The **official test** is **77.2%** — report that. |
 | Is 77% good? | For a student capstone with a single Random Forest and binary mapping, it is reasonable on KDDTest+, especially with **96.6% precision**. Literature reports vary by algorithm and preprocessing. |
 | Does this apply to live traffic? | No. Live validation uses **lab demo scenarios**, not this F1 score. |
 | What metric matters most for IDS? | Depends on goal: **precision** reduces false alarms; **recall** catches more attacks. We prioritize precision in demo use; production might tune threshold differently. |
@@ -235,20 +206,13 @@ Live demos validate **rules, pipeline, and UI** — not the offline F1 score.
 
 ---
 
-## 8. Reproducing these results
+## 7. Reproducing these results
 
 ```bash
 cd ml-service
 source venv/bin/activate
 cd model
 python train_real_dataset.py
-```
-
-If `python` fails inside Cursor, use:
-
-```bash
-PYTHONPATH=../venv/lib/python3.13/site-packages \
-  /home/linuxbrew/.linuxbrew/opt/python@3.13/bin/python3.13 train_real_dataset.py
 ```
 
 Outputs:
@@ -259,7 +223,7 @@ Outputs:
 
 ---
 
-## 9. References
+## 8. References
 
 - Tavallaee, M., et al. (2009). NSL-KDD dataset.
 - Breiman, L. (2001). Random forests.
