@@ -229,9 +229,7 @@ This document explains **what each slide is for**, **what to say**, and **how to
 >
 > If rules do not fire, the backend sends features to the **ML service** on port **8000** at `/predict`. The model returns Normal or Suspicious plus a probability.
 >
-> Every result is saved to **`traffic_logs`** in PostgreSQL. If we see **three consecutive suspicious** windows to the same destination, we also insert an **alert**.
->
-> The **React dashboard** on port **5173** reads logs and alerts and refreshes every few seconds.
+> Every result — whether from **rules** or **ML** — is saved to **`traffic_logs`** in PostgreSQL first. When the alert gate fires, a row is also written to **`alerts`**. The dashboard does **not** receive traffic directly; React polls **`GET /api/logs`** and **`GET /api/alerts`** on the backend, which reads those tables.
 
 **Emphasize:**
 

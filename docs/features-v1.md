@@ -8,18 +8,23 @@ Network intrusion detection demo: live packet capture → Express backend → Fa
 ## Pipeline
 
 ```mermaid
-flowchart LR
-  A[Live sniffer / manual API] --> B[Backend /api/analyze]
-  B --> C{Rule-based DoS?}
-  C -->|yes| D[Suspicious immediately]
-  C -->|no| E[ML service /predict]
+flowchart TB
+  A[Live sniffer / manual API] --> B[Backend /api/analyze :5000]
+  B --> C{Rule-based DoS or port scan?}
+  C -->|yes| D[Suspicious + attack_type]
+  C -->|no| E[ML service /predict :8000]
   E --> F[Normal or Suspicious]
   D --> G[(PostgreSQL traffic_logs)]
   F --> G
-  F --> H{3 consecutive suspicious?}
-  H -->|yes| I[(alerts table)]
-  G --> J[React dashboard]
+  D --> H{Alert gate}
+  F --> H
+  H -->|yes| I[(alerts)]
+  J[React dashboard :5173] -->|GET /api/logs · /api/alerts| K[Backend read APIs]
+  K --> G
+  K --> I
 ```
+
+All detections (rules **and** ML) are **written to PostgreSQL first**. The dashboard only displays data fetched through the backend API.
 
 ---
 

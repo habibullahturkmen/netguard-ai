@@ -1,0 +1,15 @@
+flowchart TB
+  A["Live Sniffer / POST /api/analyze"] --> B["Backend /api/analyze · :5000"]
+  B --> C{"Rules: DoS or Port Scan?"}
+  C -->|yes| D["Suspicious · dos / port_scan"]
+  C -->|no| E["ML Service /predict · :8000"]
+  E --> F["Normal or Suspicious · ml_anomaly"]
+  D --> G[("PostgreSQL · traffic_logs")]
+  F --> G
+  D --> H{"Alert gate · consecutive suspicious?"}
+  F --> H
+  H -->|yes| I[("PostgreSQL · alerts")]
+  J["React Dashboard · :5173"] -->|"poll every 5s"| K["GET /api/logs · /api/alerts"]
+  K --> L["Backend read APIs · :5000"]
+  L --> G
+  L --> I
