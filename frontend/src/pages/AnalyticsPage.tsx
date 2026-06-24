@@ -3,7 +3,7 @@ import AnalyticsCharts from "../components/AnalyticsCharts";
 import { useLogsRecent } from "../hooks/useLogsRecent";
 
 export default function AnalyticsPage() {
-  const { logs } = useLogsRecent();
+  const { logs, attackTypes } = useLogsRecent();
 
   return (
     <div className="page">
@@ -11,7 +11,7 @@ export default function AnalyticsPage() {
         title="Analytics"
         description="Breakdown by status, protocol, service, and TCP flags."
       />
-      <AnalyticsCharts logs={logs} />
+      <AnalyticsCharts logs={logs} attackTypes={attackTypes} />
     </div>
   );
 }

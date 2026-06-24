@@ -1,12 +1,14 @@
+import type { AttackTypeCounts } from "../utils/attackTypeStats";
 import type { TrafficLog } from "../types/TrafficLog";
 import AttackTypeChart from "./AttackTypeChart";
 import PieChart from "./PieChart";
 
 interface Props {
   logs: TrafficLog[];
+  attackTypes?: AttackTypeCounts;
 }
 
-export default function AnalyticsCharts({ logs }: Props) {
+export default function AnalyticsCharts({ logs, attackTypes }: Props) {
   const protocolCounts = logs.reduce(
     (acc, log) => {
       acc[log.protocol_type] = (acc[log.protocol_type] || 0) + 1;
@@ -44,7 +46,7 @@ export default function AnalyticsCharts({ logs }: Props) {
         values={Object.values(statusCounts)}
         variant="panel"
       />
-      <AttackTypeChart logs={logs} />
+      <AttackTypeChart logs={logs} attackTypes={attackTypes} />
       <PieChart
         title="Protocol Types"
         labels={Object.keys(protocolCounts)}

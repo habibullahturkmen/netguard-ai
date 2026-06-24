@@ -4,6 +4,11 @@ import { getDashboardStats } from "../utils/dashboardStats";
 interface Props {
   logs: TrafficLog[];
   compact?: boolean;
+  summary?: {
+    total: number;
+    normal: number;
+    suspicious: number;
+  };
 }
 
 function StatIcon({ type }: { type: "total" | "normal" | "suspicious" }) {
@@ -31,13 +36,16 @@ function StatIcon({ type }: { type: "total" | "normal" | "suspicious" }) {
   );
 }
 
-export default function StatsCards({ logs, compact = false }: Props) {
+export default function StatsCards({ logs, compact = false, summary }: Props) {
   const stats = getDashboardStats(logs);
+  const total = summary?.total ?? stats.total;
+  const normal = summary?.normal ?? stats.normal;
+  const suspicious = summary?.suspicious ?? stats.suspicious;
 
   const cards = [
-    { key: "total", label: "Total Logs", value: stats.total.toLocaleString(), type: "total" as const },
-    { key: "normal", label: "Normal", value: stats.normal.toLocaleString(), type: "normal" as const },
-    { key: "suspicious", label: "Suspicious", value: stats.suspicious.toLocaleString(), type: "suspicious" as const },
+    { key: "total", label: "Total Logs", value: total.toLocaleString(), type: "total" as const },
+    { key: "normal", label: "Normal", value: normal.toLocaleString(), type: "normal" as const },
+    { key: "suspicious", label: "Suspicious", value: suspicious.toLocaleString(), type: "suspicious" as const },
   ];
 
   if (!compact) {
