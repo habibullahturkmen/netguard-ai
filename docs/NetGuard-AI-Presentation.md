@@ -117,20 +117,28 @@ Design and implement an ML-based network monitoring system that detects suspicio
 
 ## Slide 7 — System Architecture
 
+![System architecture — Humber brand](presentation-images/slide-07-architecture-humber.png)
+
 ```mermaid
-flowchart LR
-  A[Live Sniffer / API] --> B[Backend /api/analyze]
+flowchart TB
+  A[Live Sniffer / API] --> B[Backend /api/analyze :5000]
   B --> C{Rules: DoS or Port Scan?}
   C -->|yes| D[Suspicious + attack_type]
-  C -->|no| E[ML Service /predict]
+  C -->|no| E[ML Service /predict :8000]
   E --> F[Normal or Suspicious]
   D --> G[(PostgreSQL traffic_logs)]
   F --> G
-  F --> H{3 consecutive suspicious?}
-  H -->|yes| I[(alerts table)]
-  G --> J[React Dashboard]
-  I --> J
+  D --> H{Alert gate}
+  F --> H
+  H -->|yes| I[(alerts)]
+  J[React Dashboard :5173] -->|poll every 5s| K[GET /api/logs · /api/alerts]
+  K --> L[Backend read APIs :5000]
+  L --> G
+  L --> I
 ```
+
+**Write path:** sniffer/API → backend rules or ML → **PostgreSQL** (`traffic_logs` for every flow; `alerts` when the alert gate fires).  
+**Read path:** dashboard polls **`GET /api/logs`** and **`GET /api/alerts`** on the backend, which reads from those tables.
 
 **Services and ports**
 
