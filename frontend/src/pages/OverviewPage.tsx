@@ -6,14 +6,11 @@ import StatsCards from "../components/StatsCards";
 import { useLogsRecent } from "../hooks/useLogsRecent";
 
 export default function OverviewPage() {
-  const { logs } = useLogsRecent();
-
-  const normal = logs.filter((l) => l.prediction === "Normal").length;
-  const suspicious = logs.filter((l) => l.prediction === "Suspicious").length;
+  const { logs, total, normal, suspicious, attackTypes } = useLogsRecent();
 
   return (
     <div className="page">
-      <StatsCards logs={logs} compact />
+      <StatsCards logs={logs} compact summary={{ total, normal, suspicious }} />
 
       <div className="overview-charts">
         <LogsOverTimeChart logs={logs} />
@@ -23,7 +20,7 @@ export default function OverviewPage() {
           values={[normal, suspicious]}
           variant="panel"
         />
-        <AttackTypeChart logs={logs} />
+        <AttackTypeChart logs={logs} attackTypes={attackTypes} />
       </div>
 
       <RecentPredictionsTable logs={logs} />

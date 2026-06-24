@@ -14,6 +14,7 @@ interface Props {
   labels: string[];
   values: number[];
   variant?: "card" | "panel";
+  colors?: string[];
 }
 
 export default function PieChart({
@@ -21,8 +22,9 @@ export default function PieChart({
   labels,
   values,
   variant = "card",
+  colors: colorsProp,
 }: Props) {
-  const colors = piePalette.slice(0, labels.length);
+  const colors = colorsProp ?? piePalette.slice(0, labels.length);
 
   const data = {
     labels,
